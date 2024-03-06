@@ -34,8 +34,28 @@ export const exportGraph = (graph) => {
       },
     });
   
+    const createCustomShape = (position, size, label) => {
+      const customShape = new joint.shapes.basic.Rect({
+        position,
+        size,
+        attrs: {
+          rect: { fill: 'green' },
+          text: { text: label, fill: 'white' },
+        },
+      });
+    
+      customShape.on('element:pointerclick', () => {
+        // Open modal logic here
+        console.log('Custom shape clicked!');
+      });
+    
+      return customShape;
+    };
+    
+
     const addElement = (type) => {
       let element;
+    
       if (type === 'Entity') {
         element = new joint.shapes.basic.Rect({
           position: { x: 100, y: 100 },
@@ -48,7 +68,10 @@ export const exportGraph = (graph) => {
           size: { width: 50, height: 30 },
           attrs: { circle: { fill: 'red' }, text: { text: 'Rel', fill: 'white' } },
         });
+      } else if (type === 'CustomShape') {
+        element = createCustomShape({ x: 500, y: 100 }, { width: 150, height: 50 }, 'Custom Shape');
       }
+    
       graph.addCell(element);
     };
   

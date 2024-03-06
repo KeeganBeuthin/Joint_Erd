@@ -38,6 +38,7 @@ const ErdEditor = () => {
       <div>
         <button onClick={() => editor?.addElement('Entity')}>Add Entity</button>
         <button onClick={() => editor?.addElement('Relationship')}>Add Relationship</button>
+        <button onClick={() => editor?.addElement('CustomShape')}>Add Custom Shape</button>
         <button onClick={() => exportGraph(editor.graph)}>Export ERD</button>
         <input type='file' accept='.json' onChange={e => handleFileChosen(e.target.files[0])} />
         <div ref={containerRef} style={{ width: '100%', height: '600px', background: '#f3f3f3' }}></div>
