@@ -1,81 +1,90 @@
 // erd/JointJSEditor.js
 import * as joint from 'jointjs';
-import React, { useEffect, useRef, useState } from 'react';
-
 
 export const exportGraph = (graph) => {
     if (!graph) {
         console.error('No graph instance provided for export.');
         return;
-      }
+    }
     const graphJson = graph.toJSON();
     const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(graphJson));
     const downloadAnchorNode = document.createElement('a');
-    downloadAnchorNode.setAttribute("href",     dataStr);
+    downloadAnchorNode.setAttribute("href", dataStr);
     downloadAnchorNode.setAttribute("download", "erd.json");
     document.body.appendChild(downloadAnchorNode); // required for firefox
     downloadAnchorNode.click();
     downloadAnchorNode.remove();
-  }
+};
 
-
-
-  const JointJSEditor = (container) => {
-    // Initialize the graph with cellNamespace pointing to joint.shapes
+const JointJSEditor = (container, openModalCallback) => {
     var graph = new joint.dia.Graph({}, { cellNamespace: joint.shapes });
     var paper = new joint.dia.Paper({
-      el: container,
-      model: graph,
-      width: '100%',
-      height: '600px',
-      gridSize: 10,
-      background: {
-        color: 'rgba(0, 255, 0, 0.3)',
-      },
-    });
-  
-    const createCustomShape = (position, size, label) => {
-      const customShape = new joint.shapes.basic.Rect({
-        position,
-        size,
-        attrs: {
-          rect: { fill: 'green' },
-          text: { text: label, fill: 'white' },
+        el: container,
+        model: graph,
+        width: '100%',
+        height: '600px',
+        gridSize: 10,
+        background: {
+            color: 'rgba(0, 255, 0, 0.3)',
         },
-      });
-    
-      customShape.on('element:pointerclick', () => {
-        // Open modal logic here
-        console.log('Custom shape clicked!');
-      });
-    
-      return customShape;
-    };
-    
+        interactive: true // Ensure elements are interactive
+    });
 
-    const addElement = (type) => {
-      let element;
-    
-      if (type === 'Entity') {
-        element = new joint.shapes.basic.Rect({
-          position: { x: 100, y: 100 },
-          size: { width: 100, height: 30 },
-          attrs: { rect: { fill: 'blue' }, text: { text: 'Entity', fill: 'white' } },
-        });
-      } else if (type === 'Relationship') {
-        element = new joint.shapes.basic.Circle({
-          position: { x: 300, y: 100 },
-          size: { width: 50, height: 30 },
-          attrs: { circle: { fill: 'red' }, text: { text: 'Rel', fill: 'white' } },
-        });
-      } else if (type === 'CustomShape') {
-        element = createCustomShape({ x: 500, y: 100 }, { width: 150, height: 50 }, 'Custom Shape');
+    paper.on('element:pointerdblclick', function(cellView) {
+        const newName = prompt('Enter the new name:', cellView.model.attr('text/text'));
+        if (newName && newName.trim() !== '') {
+            cellView.model.attr('text/text', newName);
+            // Optionally, you might want to update a custom property as well
+            cellView.model.prop('customName', newName);
+        }
+        const element = cellView.model;
+        const description = element.prop('description') || 'No description available.';
+        alert(description);
+    });
+
+    const createShape = (type, position, size, label, description, color = 'green') => {
+      let shape;
+      if (type === 'Rect') {
+          shape = new joint.shapes.basic.Rect({
+              position,
+              size,
+              attrs: {
+                  rect: { fill: color },
+                  text: { text: label, fill: 'white' },
+              },
+              description: description, // Add a custom property for description
+          });
+      } else if (type === 'Circle') {
+          shape = new joint.shapes.basic.Circle({
+              position,
+              size,
+              attrs: {
+                  circle: { fill: color },
+                  text: { text: label, fill: 'white' },
+              },
+              description: description, // Add a custom property for description
+          });
       }
-    
-      graph.addCell(element);
-    };
   
-    return { graph, addElement };
+      return shape;
   };
   
-  export default JointJSEditor;
+
+    const addElement = (type) => {
+        let element;
+
+        if (type === 'Entity') {
+            element = createShape('Rect', { x: 100, y: 100 }, { width: 100, height: 30 }, 'Entity', "Description",'blue');
+        } else if (type === 'Relationship') {
+            element = createShape('Circle', { x: 300, y: 100 }, { width: 50, height: 30 }, 'Rel', 'red');
+        } else if (type === 'CustomShape') {
+            element = createShape('Rect', { x: 500, y: 100 }, { width: 150, height: 50 }, 'Custom Shape');
+        }
+
+        graph.addCell(element);
+    };
+
+    return { graph, addElement };
+};
+
+export default JointJSEditor;

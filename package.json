@@ -12,8 +12,10 @@
     "backbone": "^1.6.0",
     "jointjs": "^3.7.7",
     "jquery": "^3.7.1",
+    "n3": "^1.17.2",
     "next": "14.1.0",
     "react": "^18",
+    "react-bootstrap": "^2.10.1",
     "react-dom": "^18"
   },
   "devDependencies": {

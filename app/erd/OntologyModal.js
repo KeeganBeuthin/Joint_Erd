@@ -1,9 +1,11 @@
-'use client'
+// erd/OntologyModal.js
 
 import { useState } from 'react';
 import { DataFactory, NamedNode, Literal, Store, Writer, toRDF } from 'n3';
+import { Modal } from 'react-bootstrap';
 
-export default function CreateOntology() {
+
+export default function CreateOntology({ show, onClose }) {
   const [ontologyName, setOntologyName] = useState('');
   const [properties, setProperties] = useState([]);
 
@@ -74,34 +76,41 @@ export default function CreateOntology() {
   };
 
   return (
-    <>
-      <div className="container">
-        <h1 className="mt-5">Ontology Editor</h1>
-        <div className="form-group">
-          <label>Ontology Name:</label>
-          <input
-            type="text"
-            className="form-control"
-            value={ontologyName}
-            onChange={(e) => setOntologyName(e.target.value)}
-          />
-        </div>
-        <div className="form-group">
-          <button className="btn btn-primary mr-2" onClick={handleAddProperty}>Add Property</button>
-        </div>
-        {properties.map((property, index) => (
-          <div className="form-group" key={index}>
-            <label>Property {index + 1}:</label>
+    <Modal show={show} onHide={onClose} size="lg">
+      <Modal.Header closeButton>
+        <Modal.Title>Ontology Editor</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <div className="container">
+          <div className="form-group">
+            <label>Ontology Name:</label>
             <input
               type="text"
               className="form-control"
-              value={property}
-              onChange={(e) => handleChangePropertyName(index, e.target.value)}
+              value={ontologyName}
+              onChange={(e) => setOntologyName(e.target.value)}
             />
           </div>
-        ))}
+          <div className="form-group">
+            <button className="btn btn-primary mr-2" onClick={handleAddProperty}>Add Property</button>
+          </div>
+          {properties.map((property, index) => (
+            <div className="form-group" key={index}>
+              <label>Property {index + 1}:</label>
+              <input
+                type="text"
+                className="form-control"
+                value={property}
+                onChange={(e) => handleChangePropertyName(index, e.target.value)}
+              />
+            </div>
+          ))}
+        </div>
+      </Modal.Body>
+      <Modal.Footer>
+        <button className="btn btn-secondary" onClick={onClose}>Close</button>
         <button className="btn btn-success" onClick={handleCreateOntology}>Create Ontology Data</button>
-      </div>
-    </>
+      </Modal.Footer>
+    </Modal>
   );
 }

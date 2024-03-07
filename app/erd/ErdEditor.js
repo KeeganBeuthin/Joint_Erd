@@ -2,14 +2,34 @@
 import React, { useEffect, useRef, useState } from 'react';
 import JointJSEditor from './JointJSEditor';
 import { exportGraph } from './JointJSEditor';
-
+import CreateOntology from './OntologyModal';
+import InfoModal from './InfoModal';
 const ErdEditor = () => {
     const containerRef = useRef(null);
     const [editor, setEditor] = useState(null);
+    const [showModal, setShowModal] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+     const [currentElement, setCurrentElement] = useState(null);
+
+
+    const handleElementDoubleClick = (cellView) => {
+      setCurrentElement(cellView.model);
+      setIsModalOpen(true);
+    };
+
+    
+
+    const handleModalSubmit = ({ name, description }) => {
+      if (currentElement) {
+        currentElement.attr('text/text', name);
+        currentElement.prop('description', description);
+      }
+    };
+
 
     useEffect(() => {
       if (containerRef.current && !editor) {
-        const editorInstance = JointJSEditor(containerRef.current);
+        const editorInstance = JointJSEditor(containerRef.current)
         setEditor(editorInstance);
       }
     }, [editor]);
@@ -36,13 +56,24 @@ const ErdEditor = () => {
   
     return (
       <div>
-        <button onClick={() => editor?.addElement('Entity')}>Add Entity</button>
-        <button onClick={() => editor?.addElement('Relationship')}>Add Relationship</button>
-        <button onClick={() => editor?.addElement('CustomShape')}>Add Custom Shape</button>
-        <button onClick={() => exportGraph(editor.graph)}>Export ERD</button>
-        <input type='file' accept='.json' onChange={e => handleFileChosen(e.target.files[0])} />
-        <div ref={containerRef} style={{ width: '100%', height: '600px', background: '#f3f3f3' }}></div>
-      </div>
+            <button onClick={() => setShowModal(true)}>Open Ontology Modal</button> {/* Button to open the modal */}
+            <button onClick={() => editor?.addElement('Entity')}>Add Entity</button>
+            <button onClick={() => editor?.addElement('Relationship')}>Add Relationship</button>
+            <button onClick={() => editor?.addElement('CustomShape')}>Add Custom Shape</button>
+            <button onClick={() => exportGraph(editor.graph)}>Export ERD</button>
+            <input type='file' accept='.json' onChange={e => handleFileChosen(e.target.files[0])} />
+            <div ref={containerRef} style={{ width: '100%', height: '600px', background: '#f3f3f3' }}></div>
+            
+            <InfoModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleModalSubmit}
+        initialName={currentElement?.attr('text/text') || ''}
+        initialDescription={currentElement?.prop('description') || ''}
+      />
+
+            <CreateOntology show={showModal} onClose={() => setShowModal(false)} />
+        </div>
     );
 };
 
