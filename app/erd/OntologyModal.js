@@ -4,7 +4,7 @@ import { useState } from "react";
 import { DataFactory, NamedNode, Literal, Store, Writer, toRDF } from "n3";
 import { Modal } from "react-bootstrap";
 
-export default function CreateOntology({ show, onClose }) {
+export default function OntologyModal({ show, onClose }) {
   const [ontologyName, setOntologyName] = useState("");
   const [properties, setProperties] = useState([]);
 

@@ -2,19 +2,24 @@
 import React, { useEffect, useRef, useState } from "react";
 import JointJSEditor from "./JointJSEditor";
 import { exportGraph } from "./JointJSEditor";
-import CreateOntology from "./OntologyModal";
+import OntologyModal from "./OntologyModal";
 import InfoModal from "./InfoModal";
+import { Container, Row, Col, Button, Modal } from 'react-bootstrap';
+import 'bootstrap/dist/css/bootstrap.min.css';
 const ErdEditor = () => {
-  const containerRef = useRef(null);
+  const workspaceRef = useRef(null);
   const [editor, setEditor] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentElement, setCurrentElement] = useState(null);
+  const [showOntologyModal, setShowOntologyModal] = useState(false);
+
+
 
   useEffect(() => {
-    if (containerRef.current && !editor) {
+    if (workspaceRef.current && !editor) {
       const editorInstance = JointJSEditor(
-        containerRef.current,
+        workspaceRef.current,
         handleElementDoubleClick
       );
       setEditor(editorInstance);
@@ -30,6 +35,8 @@ const ErdEditor = () => {
     if (currentElement) {
       currentElement.attr("text/text", name);
       currentElement.prop("description", description);
+      setIsModalOpen(false); 
+      
     }
     setIsModalOpen(false);
   };
@@ -55,35 +62,39 @@ const ErdEditor = () => {
   };
 
   return (
-    <div>
-      <button onClick={() => setShowModal(true)}>Open Ontology Modal</button>
-      <button onClick={() => editor?.addElement("Entity")}>Add Entity</button>
-      <button onClick={() => editor?.addElement("Relationship")}>
-        Add Relationship
-      </button>
-      <button onClick={() => editor?.addElement("CustomShape")}>
-        Add Custom Shape
-      </button>
-      <button onClick={() => exportGraph(editor.graph)}>Export ERD</button>
-      <input
-        type="file"
-        accept=".json"
-        onChange={(e) => handleFileChosen(e.target.files[0])}
-      />
-      <div
-        ref={containerRef}
-        style={{ width: "100%", height: "600px", background: "#f3f3f3" }}
-      ></div>
-
-      <InfoModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSubmit={handleModalSubmit}
-        initialName={currentElement?.attr("text/text") || ""}
-        initialDescription={currentElement?.prop("description") || ""}
-      />
-
-      <CreateOntology show={showModal} onClose={() => setShowModal(false)} />
+    <div className="container-fluid h-100">
+      <div className="row">
+        {/* Button and File Input Area */}
+        <div className="col-12">
+          <button onClick={() => setShowOntologyModal(true)} className="btn btn-primary m-1">Open Ontology Modal</button>
+          <button onClick={() => editor?.addElement("Entity")} className="btn btn-secondary m-1">Add Entity</button>
+          <button onClick={() => editor?.addElement("Relationship")} className="btn btn-secondary m-1">Add Relationship</button>
+          <button onClick={() => editor?.addElement("CustomShape")} className="btn btn-secondary m-1">Add Custom Shape</button>
+          <button onClick={() => exportGraph(editor.graph)} className="btn btn-success m-1">Export ERD</button>
+          <input type="file" accept=".json" onChange={(e) => handleFileChosen(e.target.files[0])} className="m-1"/>
+        </div>
+      </div>
+      <div className="row h-100">
+        {/* Workspace Area */}
+        <div className="col-md-9 p-2" style={{ overflowY: 'auto' }}>
+          <div ref={workspaceRef} style={{ height: '600px', background: '#f3f3f3' }}></div>
+        </div>
+        {/* Modals Area */}
+        <div className="col-md-3 p-2" style={{ overflowY: 'auto', background: '#eaeaea' }}>
+          {isModalOpen && (
+            <InfoModal
+              isOpen={isModalOpen}
+              onClose={() => setIsModalOpen(false)}
+              onSubmit={handleModalSubmit}
+              initialName={currentElement?.attr("text/text") || ""}
+              initialDescription={currentElement?.prop("description") || ""}
+            />
+          )}
+          {showOntologyModal && (
+            <OntologyModal show={showOntologyModal} onClose={() => setShowOntologyModal(false)} />
+          )}
+        </div>
+      </div>
     </div>
   );
 };
