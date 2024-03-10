@@ -4,7 +4,7 @@ import JointJSEditor from "./JointJSEditor";
 import { exportGraph } from "./JointJSEditor";
 import OntologyModal from "./OntologyModal";
 import InfoModal from "./InfoModal";
-import { Container, Row, Col, Button, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Button, Modal, Form } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 const ErdEditor = () => {
   const workspaceRef = useRef(null);
@@ -13,7 +13,8 @@ const ErdEditor = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentElement, setCurrentElement] = useState(null);
   const [showOntologyModal, setShowOntologyModal] = useState(false);
-
+  const [elements, setElements] = useState([]); // To store elements
+  const [selectedElementId, setSelectedElementId] = useState('');
 
 
   useEffect(() => {
@@ -23,6 +24,20 @@ const ErdEditor = () => {
         handleElementDoubleClick
       );
       setEditor(editorInstance);
+      editorInstance.graph.on('add remove', () => {
+        const elements = editorInstance.graph.getElements().map((el) => ({ id: el.id, name: el.attr('text/text') || 'Unnamed' }));
+        setElements(elements);
+      });
+      const updateElementsList = () => {
+        const elements = editorInstance.graph.getElements().map(el => ({
+          id: el.id,
+          name: el.attr('text/text') || `Unnamed ${el.get('type')}` // Fallback to a generic name based on type if no name
+        }));
+        setElements(elements);
+      };
+      editorInstance.graph.on('add remove change:attrs', updateElementsList);
+
+      updateElementsList();
     }
   }, [editor]);
 
@@ -44,11 +59,17 @@ const ErdEditor = () => {
   const handleFileRead = async (e) => {
     const content = e.target.result;
     const graphJson = JSON.parse(content);
-
+  
     if (editor && editor.graph) {
       try {
         editor.graph.fromJSON(graphJson);
         console.log("Graph imported successfully.");
+        // Update elements list after importing graph
+        const importedElements = editor.graph.getElements().map((el) => ({
+          id: el.id, 
+          name: el.attr('text/text') || `Unnamed ${el.get('type')} ${el.id.substring(0, 8)}`, // Providing a fallback name
+        }));
+        setElements(importedElements);
       } catch (error) {
         console.error("Error importing graph:", error);
       }
@@ -66,7 +87,15 @@ const ErdEditor = () => {
       <div className="row">
         {/* Button and File Input Area */}
         <div className="col-12">
-          <button onClick={() => setShowOntologyModal(true)} className="btn btn-primary m-1">Open Ontology Modal</button>
+          
+          <Form.Select aria-label="Select element to remove" onChange={(e) => setSelectedElementId(e.target.value)} value={selectedElementId}>
+          <option>Select an element</option>
+          {elements.map((element) => (
+            <option key={element.id} value={element.id}>{element.name}</option>
+          ))}
+        </Form.Select>
+        <button onClick={() => setShowOntologyModal(true)} className="btn btn-primary m-1">Open Ontology Modal</button>
+        <button onClick={() => editor?.removeElement(selectedElementId)} className="btn btn-danger m-1">Remove Selected Element</button>
           <button onClick={() => editor?.addElement("Entity")} className="btn btn-secondary m-1">Add Entity</button>
           <button onClick={() => editor?.addElement("Relationship")} className="btn btn-secondary m-1">Add Relationship</button>
           <button onClick={() => editor?.addElement("CustomShape")} className="btn btn-secondary m-1">Add Custom Shape</button>

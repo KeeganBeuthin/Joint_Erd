@@ -34,6 +34,12 @@ const JointJSEditor = (container, openModalCallback) => {
 
   paper.on("element:pointerdblclick", openModalCallback);
 
+  const counters = {
+    Entity: 0,
+    Relationship: 0,
+    CustomShape: 0,
+  };
+
   const createShape = (
     type,
     position,
@@ -70,38 +76,55 @@ const JointJSEditor = (container, openModalCallback) => {
 
   const addElement = (type) => {
     let element;
+    counters[type] = (counters[type] || 0) + 1;
+    const id = joint.util.uuid()
+    
+    const defaultName = `${type} ${counters[type]}`;
 
+console.log(id)
     if (type === "Entity") {
       element = createShape(
         "Rect",
         { x: 100, y: 100 },
         { width: 100, height: 30 },
-        "Entity",
+        defaultName,
         "Description",
         "blue"
       );
+      element.id=id
+      console.log(element.id)
     } else if (type === "Relationship") {
       element = createShape(
         "Circle",
         { x: 300, y: 100 },
         { width: 50, height: 30 },
-        "Rel",
+        defaultName,
         "red",
         "red"
       );
+      element.id=id
     } else if (type === "CustomShape") {
       element = createShape(
         "Rect",
         { x: 500, y: 100 },
         { width: 150, height: 50 },
-        "Custom Shape"
+        defaultName,
       );
+      element.id=id
     }
 
     graph.addCell(element);
+    console.log(graph.addCell(element))
   };
 
-  return { graph, addElement };
+  const removeElement = (id) => {
+    const cell = graph.getCell(id);
+    if (cell) {
+      cell.remove();
+    }
+  }; 
+
+  return { graph, addElement, removeElement };
 };
 
 export default JointJSEditor;
