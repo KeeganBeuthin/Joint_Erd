@@ -1,5 +1,4 @@
-//InfoModal.js
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 
 const InfoModal = ({
   isOpen,
@@ -7,17 +6,28 @@ const InfoModal = ({
   onSubmit,
   initialName,
   initialDescription,
+  initialProperties = [],
 }) => {
   const [name, setName] = useState(initialName);
   const [description, setDescription] = useState(initialDescription);
+  const [properties, setProperties] = useState([...initialProperties]);
 
-  useEffect(() => {
-    setName(initialName);
-    setDescription(initialDescription);
-  }, [initialName, initialDescription]);
+  const handlePropertyChange = (index, key, value) => {
+    const updatedProperties = properties.map((prop, propIndex) =>
+      propIndex === index ? { ...prop, [key]: value } : prop
+    );
+    setProperties(updatedProperties);
+  };
+
+  const addProperty = () => {
+    setProperties([
+      ...properties,
+      { key: `Property ${properties.length + 1}`, value: "" },
+    ]);
+  };
 
   const handleSubmit = () => {
-    onSubmit({ name, description });
+    onSubmit({ name, description, properties });
     onClose();
   };
 
@@ -49,6 +59,25 @@ const InfoModal = ({
           onChange={(e) => setDescription(e.target.value)}
         />
       </div>
+      {properties.map((property, index) => (
+        <div key={index}>
+          <input
+            type="text"
+            placeholder="Key"
+            value={property.key}
+            onChange={(e) => handlePropertyChange(index, "key", e.target.value)}
+          />
+          <input
+            type="text"
+            placeholder="Value"
+            value={property.value}
+            onChange={(e) =>
+              handlePropertyChange(index, "value", e.target.value)
+            }
+          />
+        </div>
+      ))}
+      <button onClick={addProperty}>Add Property</button>
       <button onClick={handleSubmit}>Submit</button>
       <button onClick={onClose}>Close</button>
     </div>
