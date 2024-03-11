@@ -31,7 +31,7 @@ const ErdEditor = () => {
       const updateElementsList = () => {
         const elements = editorInstance.graph.getElements().map(el => ({
           id: el.id,
-          name: el.attr('text/text') || `Unnamed ${el.get('type')}` // Fallback to a generic name based on type if no name
+          name: el.attr('text/text') || `Unnamed ${el.get('type')}` 
         }));
         setElements(elements);
       };
@@ -67,7 +67,7 @@ const ErdEditor = () => {
         // Update elements list after importing graph
         const importedElements = editor.graph.getElements().map((el) => ({
           id: el.id, 
-          name: el.attr('text/text') || `Unnamed ${el.get('type')} ${el.id.substring(0, 8)}`, // Providing a fallback name
+          name: el.attr('text/text') || `Unnamed ${el.get('type')} ${el.id.substring(0, 8)}`, 
         }));
         setElements(importedElements);
       } catch (error) {
@@ -88,12 +88,12 @@ const ErdEditor = () => {
         {/* Button and File Input Area */}
         <div className="col-12">
           
-          <Form.Select aria-label="Select element to remove" onChange={(e) => setSelectedElementId(e.target.value)} value={selectedElementId}>
-          <option>Select an element</option>
-          {elements.map((element) => (
-            <option key={element.id} value={element.id}>{element.name}</option>
-          ))}
-        </Form.Select>
+        <Form.Select aria-label="Select element to remove" onChange={(e) => setSelectedElementId(e.target.value)} value={selectedElementId}>
+  <option>Select an element</option>
+  {elements.map((element) => (
+    <option key={element.id} value={element.id}>{element.name}</option>
+  ))}
+</Form.Select>
         <button onClick={() => setShowOntologyModal(true)} className="btn btn-primary m-1">Open Ontology Modal</button>
         <button onClick={() => editor?.removeElement(selectedElementId)} className="btn btn-danger m-1">Remove Selected Element</button>
           <button onClick={() => editor?.addElement("Entity")} className="btn btn-secondary m-1">Add Entity</button>

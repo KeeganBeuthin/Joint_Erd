@@ -40,14 +40,7 @@ const JointJSEditor = (container, openModalCallback) => {
     CustomShape: 0,
   };
 
-  const createShape = (
-    type,
-    position,
-    size,
-    label,
-    description,
-    color = "green"
-  ) => {
+  const createShape = (type, position, size, label, description, color, id) => {
     let shape;
     if (type === "Rect") {
       shape = new joint.shapes.basic.Rect({
@@ -58,6 +51,7 @@ const JointJSEditor = (container, openModalCallback) => {
           text: { text: label, fill: "white" },
         },
         description: description,
+        id: id,
       });
     } else if (type === "Circle") {
       shape = new joint.shapes.basic.Circle({
@@ -68,20 +62,20 @@ const JointJSEditor = (container, openModalCallback) => {
           text: { text: label, fill: "white" },
         },
         description: description,
+        id: id,
       });
     }
-
     return shape;
   };
 
   const addElement = (type) => {
-    let element;
     counters[type] = (counters[type] || 0) + 1;
-    const id = joint.util.uuid()
-    
+    const id = joint.util.uuid();
     const defaultName = `${type} ${counters[type]}`;
 
-console.log(id)
+    console.log(id);
+
+    let element;
     if (type === "Entity") {
       element = createShape(
         "Rect",
@@ -89,32 +83,33 @@ console.log(id)
         { width: 100, height: 30 },
         defaultName,
         "Description",
-        "blue"
+        "blue",
+        id
       );
-      element.id=id
-      console.log(element.id)
     } else if (type === "Relationship") {
       element = createShape(
         "Circle",
         { x: 300, y: 100 },
         { width: 50, height: 30 },
         defaultName,
+        "Description",
         "red",
-        "red"
+        id
       );
-      element.id=id
     } else if (type === "CustomShape") {
       element = createShape(
         "Rect",
         { x: 500, y: 100 },
         { width: 150, height: 50 },
         defaultName,
+        "Description",
+        "green",
+        id
       );
-      element.id=id
     }
 
     graph.addCell(element);
-    console.log(graph.addCell(element))
+    console.log(element);
   };
 
   const removeElement = (id) => {
@@ -122,7 +117,7 @@ console.log(id)
     if (cell) {
       cell.remove();
     }
-  }; 
+  };
 
   return { graph, addElement, removeElement };
 };
