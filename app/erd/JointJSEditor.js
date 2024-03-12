@@ -40,6 +40,55 @@ const JointJSEditor = (container, openModalCallback) => {
     CustomShape: 0,
   };
 
+  const findElementsToLink = () => {
+    const elements = graph.getElements();
+    const linksToCreate = [];
+
+    elements.forEach((element) => {
+      const elementProps = element.prop("customProperties") || [];
+
+      const elementPropValues = elementProps.map((prop) => prop.value);
+
+      elements.forEach((compareElement) => {
+        if (element.id === compareElement.id) {
+          return;
+        }
+
+        const compareProps = compareElement.prop("customProperties") || [];
+
+        const comparePropValues = compareProps.map((prop) => prop.value);
+
+        const sharedValue = elementPropValues.find((value) =>
+          comparePropValues.includes(value)
+        );
+
+        if (sharedValue) {
+          const linkExists = linksToCreate.some(
+            (link) =>
+              ((link.source === element.id &&
+                link.target === compareElement.id) ||
+                (link.source === compareElement.id &&
+                  link.target === element.id)) &&
+              link.property.value === sharedValue
+          );
+
+          if (!linkExists) {
+            const sharedPropKey =
+              elementProps.find((prop) => prop.value === sharedValue)?.key ||
+              "Shared Property";
+            linksToCreate.push({
+              source: element.id,
+              target: compareElement.id,
+              property: { key: sharedPropKey, value: sharedValue },
+            });
+          }
+        }
+      });
+    });
+
+    return linksToCreate;
+  };
+
   const createShape = (type, position, size, label, description, color, id) => {
     let shape;
     if (type === "Rect") {
@@ -119,7 +168,41 @@ const JointJSEditor = (container, openModalCallback) => {
     }
   };
 
-  return { graph, addElement, removeElement };
+  const createLinksForSharedProperties = () => {
+    const linksToCreate = findElementsToLink();
+
+    linksToCreate.forEach(({ source, target, property }) => {
+      const link = new joint.dia.Link({
+        source: { id: source },
+        target: { id: target },
+        labels: [
+          {
+            position: 0.5,
+            attrs: {
+              text: {
+                text: `Shared: ${property.key}=${property.value}`,
+                "font-weight": "bold",
+                fill: "black",
+                "font-size": 12,
+                "font-family": "Arial, sans-serif",
+              },
+              rect: {
+                "stroke-width": 1,
+                fill: "transparent",
+              },
+            },
+          },
+        ],
+        attrs: {
+          ".connection": { stroke: "blue", "stroke-width": 2 },
+          ".marker-target": { fill: "blue", d: "M 10 0 L 0 5 L 10 10 z" },
+        },
+      });
+      graph.addCell(link);
+    });
+  };
+
+  return { graph, addElement, removeElement, createLinksForSharedProperties };
 };
 
 export default JointJSEditor;

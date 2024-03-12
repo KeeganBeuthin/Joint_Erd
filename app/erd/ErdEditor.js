@@ -57,6 +57,12 @@ const ErdEditor = () => {
     setIsModalOpen(false);
   };
 
+  const handleCreateLinks = () => {
+    if (editor) {
+      editor.createLinksForSharedProperties();
+    }
+  };
+
   const handleFileRead = async (e) => {
     const content = e.target.result;
     const graphJson = JSON.parse(content);
@@ -100,6 +106,7 @@ const ErdEditor = () => {
               </option>
             ))}
           </Form.Select>
+          <button onClick={handleCreateLinks} className="btn btn-primary m-1">Create Links Based on Shared Properties</button>
           <button
             onClick={() => setShowOntologyModal(true)}
             className="btn btn-primary m-1"
@@ -142,6 +149,7 @@ const ErdEditor = () => {
             onChange={(e) => handleFileChosen(e.target.files[0])}
             className="m-1"
           />
+          
         </div>
       </div>
       <div className="row h-100">
