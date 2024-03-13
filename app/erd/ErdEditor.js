@@ -6,6 +6,9 @@ import OntologyModal from "./OntologyModal";
 import InfoModal from "./InfoModal";
 import { Container, Row, Col, Button, Modal, Form } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
+import TreeView from './TreeView';
+import ElementDetails from "./ElementDetails";
+
 const ErdEditor = () => {
   const workspaceRef = useRef(null);
   const [editor, setEditor] = useState(null);
@@ -15,6 +18,8 @@ const ErdEditor = () => {
   const [elements, setElements] = useState([]);
   const [selectedElementId, setSelectedElementId] = useState("");
   const [customProperties, setCustomProperties] = useState([]);
+  const [selectedElement, setSelectedElement] = useState(null);
+
 
   useEffect(() => {
     if (workspaceRef.current && !editor) {
@@ -90,22 +95,39 @@ const ErdEditor = () => {
     fileReader.readAsText(file);
   };
 
+  const handleElementSelect = (elementId) => {
+    setSelectedElementId(elementId); // Store only the element ID
+  
+    // Setup listener for the selected element's changes
+    const element = editor.graph.getCell(elementId);
+    if(element) {
+      element.on('change:attrs change:description change:customProperties', () => {
+        // Force an update when any attribute of the selected element changes
+        // Triggering a React state update to re-render the component
+        setSelectedElementId(elementId + "?update=" + Math.random()); // A trick to force update
+      });
+    }
+  };
+
+  const renderSelectedElementDetails = () => {
+    const element = selectedElementId ? editor.graph.getCell(selectedElementId.split("?")[0]) : null;
+    if (element) {
+      const elementDetails = {
+        id: element.id,
+        name: element.attributes.attrs.text.text,
+        description: element.attributes.description,
+        customProperties: element.attributes.customProperties || [],
+      };
+      return <ElementDetails element={elementDetails} />;
+    }
+    return <ElementDetails element={null} />;
+  };
+
   return (
     <div className="container-fluid h-100">
       <div className="row">
         <div className="col-12">
-          <Form.Select
-            aria-label="Select element to remove"
-            onChange={(e) => setSelectedElementId(e.target.value)}
-            value={selectedElementId}
-          >
-            <option>Select an element</option>
-            {elements.map((element) => (
-              <option key={element.id} value={element.id}>
-                {element.name}
-              </option>
-            ))}
-          </Form.Select>
+  
           <button onClick={handleCreateLinks} className="btn btn-primary m-1">Create Links Based on Shared Properties</button>
           <button
             onClick={() => setShowOntologyModal(true)}
@@ -149,43 +171,39 @@ const ErdEditor = () => {
             onChange={(e) => handleFileChosen(e.target.files[0])}
             className="m-1"
           />
-          
         </div>
       </div>
       <div className="row h-100">
-        <div className="col-md-9 p-2" style={{ overflowY: "auto" }}>
-          <div
-            ref={workspaceRef}
-            style={{ height: "600px", background: "#f3f3f3" }}
-          ></div>
+        <div className="col-md-2 p-2" style={{ overflowY: "auto", background: "#eaeaea" }}>
+          {/* TreeView component to display elements in a tree structure, now on the left */}
+          <TreeView elements={elements} onElementSelect={handleElementSelect} />
         </div>
-
-        <div
-          className="col-md-3 p-2"
-          style={{ overflowY: "auto", background: "#eaeaea" }}
-        >
-          {isModalOpen && (
-            <InfoModal
-              isOpen={isModalOpen}
-              onClose={() => setIsModalOpen(false)}
-              onSubmit={handleModalSubmit}
-              initialName={
-                editor?.graph.getCell(currentElementId)?.attr("text/text") || ""
-              }
-              initialDescription={
-                editor?.graph.getCell(currentElementId)?.prop("description") ||
-                ""
-              }
-              initialProperties={customProperties}
-            />
-          )}
-          {showOntologyModal && (
-            <OntologyModal
-              show={showOntologyModal}
-              onClose={() => setShowOntologyModal(false)}
-            />
-          )}
+        
+        <div className="col-md-7 p-2" style={{ overflowY: "auto" }}>
+          <div ref={workspaceRef} style={{ height: "600px", background: "#f3f3f3" }}></div>
         </div>
+        
+        <div className="col-md-3 p-2" style={{ overflowY: "auto", background: "#eaeaea" }}>
+  {renderSelectedElementDetails()}
+</div>
+        
+        {/* Modals can be placed outside the main content layout since they are overlay components */}
+        {isModalOpen && (
+          <InfoModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onSubmit={handleModalSubmit}
+            initialName={editor?.graph.getCell(currentElementId)?.attr("text/text") || ""}
+            initialDescription={editor?.graph.getCell(currentElementId)?.prop("description") || ""}
+            initialProperties={customProperties}
+          />
+        )}
+        {showOntologyModal && (
+          <OntologyModal
+            show={showOntologyModal}
+            onClose={() => setShowOntologyModal(false)}
+          />
+        )}
       </div>
     </div>
   );
