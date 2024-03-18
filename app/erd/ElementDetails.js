@@ -1,5 +1,5 @@
 // ElementDetails.js
-import React from 'react';
+import React from "react";
 
 const ElementDetails = ({ element }) => {
   if (!element) {
@@ -14,7 +14,9 @@ const ElementDetails = ({ element }) => {
       <div>
         <h6>Properties:</h6>
         {element.customProperties.map((prop, index) => (
-          <p key={index}>{prop.key}: {prop.value}</p>
+          <p key={index}>
+            {prop.key}: {prop.value}
+          </p>
         ))}
       </div>
     </div>

@@ -6,7 +6,7 @@ import OntologyModal from "./OntologyModal";
 import InfoModal from "./InfoModal";
 import { Container, Row, Col, Button, Modal, Form } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
-import TreeView from './TreeView';
+import TreeView from "./TreeView";
 import ElementDetails from "./ElementDetails";
 
 const ErdEditor = () => {
@@ -20,13 +20,12 @@ const ErdEditor = () => {
   const [customProperties, setCustomProperties] = useState([]);
   const [selectedElement, setSelectedElement] = useState(null);
 
-
   useEffect(() => {
     if (workspaceRef.current && !editor) {
       const editorInstance = JointJSEditor(
         workspaceRef.current,
         handleElementDoubleClick,
-        handleElementClick // Pass the new callback here
+        handleElementClick
       );
       setEditor(editorInstance);
       editorInstance.graph.on("add remove change:attrs", () =>
@@ -65,8 +64,6 @@ const ErdEditor = () => {
 
   const handleElementClick = (elementId) => {
     setSelectedElementId(elementId);
-    // Since we're directly using the selectedElementId to fetch and render the element's details,
-    // this will trigger the `renderSelectedElementDetails` function to re-render with the new selection.
   };
   const handleCreateLinks = () => {
     if (editor) {
@@ -102,21 +99,23 @@ const ErdEditor = () => {
   };
 
   const handleElementSelect = (elementId) => {
-    setSelectedElementId(elementId); // Store only the element ID
-  
-    // Setup listener for the selected element's changes
+    setSelectedElementId(elementId);
+
     const element = editor.graph.getCell(elementId);
-    if(element) {
-      element.on('change:attrs change:description change:customProperties', () => {
-        // Force an update when any attribute of the selected element changes
-        // Triggering a React state update to re-render the component
-        setSelectedElementId(elementId + "?update=" + Math.random()); // A trick to force update
-      });
+    if (element) {
+      element.on(
+        "change:attrs change:description change:customProperties",
+        () => {
+          setSelectedElementId(elementId + "?update=" + Math.random());
+        }
+      );
     }
   };
 
   const renderSelectedElementDetails = () => {
-    const element = selectedElementId ? editor.graph.getCell(selectedElementId.split("?")[0]) : null;
+    const element = selectedElementId
+      ? editor.graph.getCell(selectedElementId.split("?")[0])
+      : null;
     if (element) {
       const elementDetails = {
         id: element.id,
@@ -133,8 +132,9 @@ const ErdEditor = () => {
     <div className="container-fluid h-100">
       <div className="row">
         <div className="col-12">
-  
-          <button onClick={handleCreateLinks} className="btn btn-primary m-1">Create Links Based on Shared Properties</button>
+          <button onClick={handleCreateLinks} className="btn btn-primary m-1">
+            Create Links Based on Shared Properties
+          </button>
           <button
             onClick={() => setShowOntologyModal(true)}
             className="btn btn-primary m-1"
@@ -180,28 +180,41 @@ const ErdEditor = () => {
         </div>
       </div>
       <div className="row h-100">
-        <div className="col-md-2 p-2" style={{ overflowY: "auto", background: "#eaeaea" }}>
-          {/* TreeView component to display elements in a tree structure, now on the left */}
-          <TreeView elements={elements} onElementSelect={handleElementSelect} selectedElementId={selectedElementId} />
+        <div
+          className="col-md-2 p-2"
+          style={{ overflowY: "auto", background: "#eaeaea" }}
+        >
+          <TreeView
+            elements={elements}
+            onElementSelect={handleElementSelect}
+            selectedElementId={selectedElementId}
+          />
+        </div>
 
-        </div>
-        
         <div className="col-md-7 p-2" style={{ overflowY: "auto" }}>
-          <div ref={workspaceRef} style={{ height: "600px", background: "#f3f3f3" }}></div>
+          <div
+            ref={workspaceRef}
+            style={{ height: "600px", background: "#f3f3f3" }}
+          ></div>
         </div>
-        
-        <div className="col-md-3 p-2" style={{ overflowY: "auto", background: "#eaeaea" }}>
-  {renderSelectedElementDetails()}
-</div>
-        
-        {/* Modals can be placed outside the main content layout since they are overlay components */}
+
+        <div
+          className="col-md-3 p-2"
+          style={{ overflowY: "auto", background: "#eaeaea" }}
+        >
+          {renderSelectedElementDetails()}
+        </div>
         {isModalOpen && (
           <InfoModal
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             onSubmit={handleModalSubmit}
-            initialName={editor?.graph.getCell(currentElementId)?.attr("text/text") || ""}
-            initialDescription={editor?.graph.getCell(currentElementId)?.prop("description") || ""}
+            initialName={
+              editor?.graph.getCell(currentElementId)?.attr("text/text") || ""
+            }
+            initialDescription={
+              editor?.graph.getCell(currentElementId)?.prop("description") || ""
+            }
             initialProperties={customProperties}
           />
         )}

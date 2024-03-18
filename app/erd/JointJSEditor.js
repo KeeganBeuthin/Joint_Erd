@@ -18,7 +18,7 @@ export const exportGraph = (graph) => {
   downloadAnchorNode.remove();
 };
 
-const JointJSEditor = (container, openModalCallback,onElementClick) => {
+const JointJSEditor = (container, openModalCallback, onElementClick) => {
   var graph = new joint.dia.Graph({}, { cellNamespace: joint.shapes });
   var paper = new joint.dia.Paper({
     el: container,
@@ -34,13 +34,13 @@ const JointJSEditor = (container, openModalCallback,onElementClick) => {
 
   paper.on("element:pointerdblclick", openModalCallback);
 
-  paper.on('element:pointerclick', function(elementView) {
-    if (typeof onElementClick === 'function') {
+  paper.on("element:pointerclick", function (elementView) {
+    if (typeof onElementClick === "function") {
       const model = elementView.model;
-      onElementClick(model.id); // Pass the clicked element's ID to the callback
+      onElementClick(model.id);
     }
   });
-  
+
   const counters = {
     Entity: 0,
     Relationship: 0,
