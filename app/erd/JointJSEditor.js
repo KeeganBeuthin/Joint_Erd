@@ -1,6 +1,6 @@
 // erd/JointJSEditor.js
 import * as joint from "jointjs";
-
+import { Vectorizer } from "jointjs";
 export const exportGraph = (graph) => {
   if (!graph) {
     console.error("No graph instance provided for export.");
@@ -52,7 +52,7 @@ const JointJSEditor = (container, openModalCallback, onElementClick) => {
     const linksToCreate = [];
 
     elements.forEach((element) => {
-      const elementProps = element.prop("customProperties") || [];
+      const elementProps = element.prop('customProperties') || [];
 
       const elementPropValues = elementProps.map((prop) => prop.value);
 
@@ -61,32 +61,34 @@ const JointJSEditor = (container, openModalCallback, onElementClick) => {
           return;
         }
 
-        const compareProps = compareElement.prop("customProperties") || [];
-
+        const compareProps = compareElement.prop('customProperties') || [];
         const comparePropValues = compareProps.map((prop) => prop.value);
 
-        const sharedValue = elementPropValues.find((value) =>
-          comparePropValues.includes(value)
+        // Accumulate shared properties
+        const sharedProperties = elementProps.filter((prop) =>
+          comparePropValues.includes(prop.value)
         );
 
-        if (sharedValue) {
-          const linkExists = linksToCreate.some(
+        if (sharedProperties.length) {
+          // Check if a link for these elements already exists in linksToCreate
+          const existingLinkIndex = linksToCreate.findIndex(
             (link) =>
-              ((link.source === element.id &&
-                link.target === compareElement.id) ||
-                (link.source === compareElement.id &&
-                  link.target === element.id)) &&
-              link.property.value === sharedValue
+              (link.source === element.id && link.target === compareElement.id) ||
+              (link.source === compareElement.id && link.target === element.id)
           );
 
-          if (!linkExists) {
-            const sharedPropKey =
-              elementProps.find((prop) => prop.value === sharedValue)?.key ||
-              "Shared Property";
+          if (existingLinkIndex > -1) {
+            // If a link exists, append new shared properties to it
+            linksToCreate[existingLinkIndex].properties = [
+              ...linksToCreate[existingLinkIndex].properties,
+              ...sharedProperties,
+            ];
+          } else {
+            // If no link exists, create a new one
             linksToCreate.push({
               source: element.id,
               target: compareElement.id,
-              property: { key: sharedPropKey, value: sharedValue },
+              properties: sharedProperties,
             });
           }
         }
@@ -177,35 +179,79 @@ const JointJSEditor = (container, openModalCallback, onElementClick) => {
 
   const createLinksForSharedProperties = () => {
     const linksToCreate = findElementsToLink();
-
-    linksToCreate.forEach(({ source, target, property }) => {
+  
+    linksToCreate.forEach(({ source, target, properties }) => {
+      const uniqueProperties = [...new Map(properties.map(prop => [prop.value, prop])).values()];
+      
+      const sharedPropertiesText = uniqueProperties.map(prop => `${prop.key}: ${prop.value}`).join('\n');
+  
       const link = new joint.dia.Link({
         source: { id: source },
         target: { id: target },
+        attrs: {
+          '.connection': { stroke: 'blue', 'stroke-width': 2 },
+          '.marker-target': { fill: 'blue', d: 'M 10 0 L 0 5 L 10 10 z' },
+          '.connection-wrap': { display: 'none' }
+        },
         labels: [
           {
-            position: 0.5,
             attrs: {
               text: {
-                text: `Shared: ${property.key}=${property.value}`,
-                "font-weight": "bold",
-                fill: "black",
-                "font-size": 12,
-                "font-family": "Arial, sans-serif",
+                text: '', 
+                'font-size': 12,
+                'font-family': 'Arial, sans-serif',
               },
               rect: {
-                "stroke-width": 1,
-                fill: "transparent",
+                fill: '#f7f7f7', 
+                stroke: '#333', 
+                'stroke-width': 1,
+                'ref-x': 0.5,
+                'ref-y': 0.5,
               },
             },
-          },
-        ],
-        attrs: {
-          ".connection": { stroke: "blue", "stroke-width": 2 },
-          ".marker-target": { fill: "blue", d: "M 10 0 L 0 5 L 10 10 z" },
-        },
+            position: {
+              distance: 0.5, 
+            }
+          }
+        ]
       });
+  
       graph.addCell(link);
+  
+      paper.on('link:mouseenter', function(linkView) {
+        if (linkView.model === link && linkView.model.label(0).attrs.text.text === '') {
+          var textElement = Vectorizer('text', {
+            'font-size': '15px',
+            'font-family': 'Arial, sans-serif',
+            text: sharedPropertiesText
+          });
+      
+          Vectorizer(paper.svg).append(textElement);
+      
+          var bbox = textElement.bbox();
+      
+          textElement.remove();
+              
+          link.label(0, {
+            attrs: {
+              text: { text: sharedPropertiesText },
+              rect: {
+                ...link.label(0).attrs.rect,
+                width: bbox.width + 30, 
+                height: bbox.height + 30
+              }
+            }
+          });
+          linkView.showTools();
+        }
+      });
+  
+      paper.on('link:mouseleave', function(linkView) {
+        if (linkView.model === link) {
+          link.label(0, { attrs: { text: { text: '' }, rect: { fill: 'none' } } });
+          linkView.hideTools();
+        }
+      });
     });
   };
 
