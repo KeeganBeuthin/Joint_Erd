@@ -182,7 +182,8 @@ const ErdEditor = () => {
       <div className="row h-100">
         <div className="col-md-2 p-2" style={{ overflowY: "auto", background: "#eaeaea" }}>
           {/* TreeView component to display elements in a tree structure, now on the left */}
-          <TreeView elements={elements} onElementSelect={handleElementSelect} />
+          <TreeView elements={elements} onElementSelect={handleElementSelect} selectedElementId={selectedElementId} />
+
         </div>
         
         <div className="col-md-7 p-2" style={{ overflowY: "auto" }}>
