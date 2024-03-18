@@ -25,7 +25,8 @@ const ErdEditor = () => {
     if (workspaceRef.current && !editor) {
       const editorInstance = JointJSEditor(
         workspaceRef.current,
-        handleElementDoubleClick
+        handleElementDoubleClick,
+        handleElementClick // Pass the new callback here
       );
       setEditor(editorInstance);
       editorInstance.graph.on("add remove change:attrs", () =>
@@ -62,6 +63,11 @@ const ErdEditor = () => {
     setIsModalOpen(false);
   };
 
+  const handleElementClick = (elementId) => {
+    setSelectedElementId(elementId);
+    // Since we're directly using the selectedElementId to fetch and render the element's details,
+    // this will trigger the `renderSelectedElementDetails` function to re-render with the new selection.
+  };
   const handleCreateLinks = () => {
     if (editor) {
       editor.createLinksForSharedProperties();
