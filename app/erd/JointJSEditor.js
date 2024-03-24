@@ -18,7 +18,7 @@ export const exportGraph = (graph) => {
   downloadAnchorNode.remove();
 };
 
-const JointJSEditor = (container, openModalCallback, onElementClick) => {
+const JointJSEditor = (container, openModalCallback, onElementClick, activeTabId) => {
   var graph = new joint.dia.Graph({}, { cellNamespace: joint.shapes });
   var paper = new joint.dia.Paper({
     el: container,

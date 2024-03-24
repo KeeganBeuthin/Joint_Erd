@@ -19,21 +19,47 @@ const ErdEditor = () => {
   const [selectedElementId, setSelectedElementId] = useState("");
   const [customProperties, setCustomProperties] = useState([]);
   const [selectedElement, setSelectedElement] = useState(null);
+  const [tabs, setTabs] = useState([
+    { id: 1, name: 'Tab 1', editorInstance: null },
+  ]);
+  const [activeTabId, setActiveTabId] = useState(1);
+
+  const activeTab = tabs.find(tab => tab.id === activeTabId) || {};
+
+  const addNewTab = () => {
+    const newTabId = tabs.length + 1;
+    setTabs([...tabs, { id: newTabId, name: `Tab ${newTabId}`, editorInstance: null }]);
+    setActiveTabId(newTabId);
+  };
 
   useEffect(() => {
-    if (workspaceRef.current && !editor) {
+    if (workspaceRef.current && !activeTab.editorInstance) {
       const editorInstance = JointJSEditor(
         workspaceRef.current,
         handleElementDoubleClick,
-        handleElementClick
+        handleElementClick,
+        activeTabId
       );
+     
       setEditor(editorInstance);
       editorInstance.graph.on("add remove change:attrs", () =>
         updateElementsList(editorInstance)
       );
       updateElementsList(editorInstance);
     }
-  }, [editor]);
+  }, [editor, activeTabId, tabs]);
+
+  useEffect(() => {
+    const currentTab = tabs.find(tab => tab.id === activeTabId);
+    if (workspaceRef.current && !activeTab.editorInstance) {
+      const editorInstance = JointJSEditor(
+        workspaceRef.current,
+        handleElementDoubleClick,
+        handleElementClick
+      );
+      setTabs(tabs.map(tab => tab.id === activeTabId ? { ...tab, editorInstance } : tab));
+    }
+  }, [activeTabId, tabs]);
 
   const updateElementsList = (editorInstance) => {
     const updatedElements = editorInstance.graph.getElements().map((el) => ({
@@ -51,8 +77,8 @@ const ErdEditor = () => {
   };
 
   const handleModalSubmit = ({ name, description, properties }) => {
-    if (currentElementId && editor) {
-      const element = editor.graph.getCell(currentElementId);
+    if (currentElementId && activeTab.editorInstance) {
+      const element = activeTab.editorInstance.graph.getCell(currentElementId);
       if (element) {
         element.attr("text/text", name);
         element.prop("description", description);
@@ -66,8 +92,8 @@ const ErdEditor = () => {
     setSelectedElementId(elementId);
   };
   const handleCreateLinks = () => {
-    if (editor) {
-      editor.createLinksForSharedProperties();
+    if (activeTab.editorInstance) {
+      activeTab.editorInstance.createLinksForSharedProperties();
     }
   };
 
@@ -75,11 +101,11 @@ const ErdEditor = () => {
     const content = e.target.result;
     const graphJson = JSON.parse(content);
 
-    if (editor && editor.graph) {
+    if (activeTab.editorInstance && activeTab.editorInstance.graph) {
       try {
-        editor.graph.fromJSON(graphJson);
+        activeTab.editorInstance.graph.fromJSON(graphJson);
         console.log("Graph imported successfully.");
-        const importedElements = editor.graph.getElements().map((el) => ({
+        const importedElements = activeTab.editorInstance.graph.getElements().map((el) => ({
           id: el.id,
           name:
             el.attr("text/text") ||
@@ -101,7 +127,7 @@ const ErdEditor = () => {
   const handleElementSelect = (elementId) => {
     setSelectedElementId(elementId);
 
-    const element = editor.graph.getCell(elementId);
+    const element = activeTab.editorInstance.graph.getCell(elementId);
     if (element) {
       element.on(
         "change:attrs change:description change:customProperties",
@@ -114,7 +140,7 @@ const ErdEditor = () => {
 
   const renderSelectedElementDetails = () => {
     const element = selectedElementId
-      ? editor.graph.getCell(selectedElementId.split("?")[0])
+      ? activeTab.editorInstance.graph.getCell(selectedElementId.split("?")[0])
       : null;
     if (element) {
       const elementDetails = {
@@ -132,6 +158,14 @@ const ErdEditor = () => {
     <div className="container-fluid h-100">
       <div className="row">
         <div className="col-12">
+
+        {tabs.map(tab => (
+      <button key={tab.id} onClick={() => setActiveTabId(tab.id)} className={activeTabId === tab.id ? 'btn btn-primary' : 'btn btn-secondary'}>
+        {tab.name}
+      </button>
+    ))}
+    <button onClick={addNewTab} className="btn btn-success">+ New Tab</button>
+
           <button onClick={handleCreateLinks} className="btn btn-primary m-1">
             Create Links Based on Shared Properties
           </button>
@@ -142,31 +176,31 @@ const ErdEditor = () => {
             Open Ontology Modal
           </button>
           <button
-            onClick={() => editor?.removeElement(selectedElementId)}
+            onClick={() => activeTab.editorInstance?.removeElement(selectedElementId)}
             className="btn btn-danger m-1"
           >
             Remove Selected Element
           </button>
           <button
-            onClick={() => editor?.addElement("Entity")}
+            onClick={() => activeTab.editorInstance?.addElement("Entity")}
             className="btn btn-secondary m-1"
           >
             Add Entity
           </button>
           <button
-            onClick={() => editor?.addElement("Relationship")}
+            onClick={() => activeTab.editorInstance?.addElement("Relationship")}
             className="btn btn-secondary m-1"
           >
             Add Relationship
           </button>
           <button
-            onClick={() => editor?.addElement("CustomShape")}
+            onClick={() => activeTab.editorInstance?.addElement("CustomShape")}
             className="btn btn-secondary m-1"
           >
             Add Custom Shape
           </button>
           <button
-            onClick={() => exportGraph(editor.graph)}
+            onClick={() => exportGraph(activeTab.editorInstance.graph)}
             className="btn btn-success m-1"
           >
             Export ERD
@@ -210,10 +244,10 @@ const ErdEditor = () => {
             onClose={() => setIsModalOpen(false)}
             onSubmit={handleModalSubmit}
             initialName={
-              editor?.graph.getCell(currentElementId)?.attr("text/text") || ""
+              activeTab.editorInstance?.graph.getCell(currentElementId)?.attr("text/text") || ""
             }
             initialDescription={
-              editor?.graph.getCell(currentElementId)?.prop("description") || ""
+              activeTab.editorInstance?.graph.getCell(currentElementId)?.prop("description") || ""
             }
             initialProperties={customProperties}
           />
