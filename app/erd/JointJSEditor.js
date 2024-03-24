@@ -47,6 +47,11 @@ const JointJSEditor = (container, openModalCallback, onElementClick, activeTabId
     CustomShape: 0,
   };
 
+  function renderPaper(container) {
+    this.paper.setElement(container);
+    // Additional logic might be required to refresh or rerender the paper if necessary
+  }
+
   const findElementsToLink = () => {
     const elements = graph.getElements();
     const linksToCreate = [];
@@ -255,7 +260,7 @@ const JointJSEditor = (container, openModalCallback, onElementClick, activeTabId
     });
   };
 
-  return { graph, addElement, removeElement, createLinksForSharedProperties };
+  return { graph, paper, renderPaper, addElement, removeElement, createLinksForSharedProperties };
 };
 
 export default JointJSEditor;

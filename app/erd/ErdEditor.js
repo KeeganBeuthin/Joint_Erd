@@ -20,13 +20,14 @@ const ErdEditor = () => {
   const [customProperties, setCustomProperties] = useState([]);
   const [selectedElement, setSelectedElement] = useState(null);
   const [tabs, setTabs] = useState([
-    { id: 1, name: 'Tab 1', editorInstance: null },
+    { id: 1, name: 'Tab 1', editorInstance: null, graphJson: null },
   ]);
   const [activeTabId, setActiveTabId] = useState(1);
 
   const activeTab = tabs.find(tab => tab.id === activeTabId) || {};
 
   const addNewTab = () => {
+    saveCurrentGraphState()
     const newTabId = tabs.length + 1;
     setTabs([...tabs, { id: newTabId, name: `Tab ${newTabId}`, editorInstance: null }]);
     setActiveTabId(newTabId);
@@ -50,18 +51,71 @@ const ErdEditor = () => {
   }, [editor, activeTabId, tabs]);
 
   useEffect(() => {
-    if (workspaceRef.current) {
-      if (!activeTab.editorInstance) {
-        // Initialize a new editor instance for a new tab
-        const editorInstance = JointJSEditor(workspaceRef.current, handleElementDoubleClick, handleElementClick);
-        setTabs(tabs.map(tab => tab.id === activeTabId ? { ...tab, editorInstance } : tab));
+    console.log(`Active tab ID changed to: ${activeTabId}`);
+    const activeTab = tabs.find(tab => tab.id === activeTabId);
+    console.log(`Found active tab: `, activeTab);
+  
+    if (workspaceRef.current && activeTab?.editorInstance) {
+      console.log("Setting paper element for the active tab's editor instance.");
+      activeTab.editorInstance.paper.setElement(workspaceRef.current);
+  
+      if (activeTab.graphJson) {
+        console.log("Loading graph JSON into the active tab's editor instance:", activeTab.graphJson);
+        activeTab.editorInstance.graph.fromJSON(activeTab.graphJson);
+        console.log("Graph JSON loaded successfully.");
       } else {
-        // Here, make sure the UI is correctly updated to reflect the active tab's state
-        // This might involve resetting selected elements, clearing modals, etc.
-        updateElementsList(activeTab.editorInstance);
+        console.log("No graph JSON data found for the active tab.");
       }
+  
+      updateElementsList(activeTab.editorInstance);
+      console.log("Updated elements list based on the current graph model.");
+    } else {
+      console.log("Workspace reference or active tab's editor instance not found.");
     }
   }, [activeTabId, tabs]);
+
+  useEffect(() => {
+    if (activeTab.editorInstance) {
+      const graph = activeTab.editorInstance.graph;
+      const onGraphChange = () => saveCurrentGraphState();
+  
+      graph.on('add remove change', onGraphChange);
+  
+      // Clean up the event listener when the component unmounts or the active tab changes
+      return () => graph.off('add remove change', onGraphChange);
+    }
+  }, [activeTab.editorInstance, activeTabId])
+  
+  const switchTab = (newTabId) => {
+    saveCurrentGraphState(); // Save the current graph state before switching
+    setActiveTabId(newTabId);
+  };
+
+  useEffect(() => {
+    // This effect ensures that the appropriate editor instance is initialized and displayed when the tab is switched.
+    if (workspaceRef.current && !activeTab.editorInstance) {
+      // Initialize editor instance if not already done
+      const newEditorInstance = JointJSEditor(workspaceRef.current, handleElementDoubleClick, handleElementClick, activeTabId);
+      // Update the tabs state with this new editor instance for the active tab
+      const updatedTabs = tabs.map(tab => tab.id === activeTabId ? { ...tab, editorInstance: newEditorInstance } : tab);
+      setTabs(updatedTabs);
+      // Ensure the paper for the newly activated tab is attached to the workspaceRef
+      newEditorInstance.paper.setElement(workspaceRef.current);
+    } else if (workspaceRef.current && activeTab.editorInstance) {
+      // When switching tabs, if the editor instance already exists, we simply need to ensure its paper is displayed
+      activeTab.editorInstance.paper.setElement(workspaceRef.current);
+      updateElementsList(activeTab.editorInstance);
+    }
+    // The dependency array here ensures this effect runs only when the activeTabId changes, or the tabs array is updated
+  }, [activeTabId, tabs]);
+
+
+  const saveCurrentGraphState = () => {
+    const currentGraphJson = activeTab.editorInstance?.graph.toJSON();
+    setTabs(tabs.map(tab =>
+      tab.id === activeTabId ? { ...tab, graphJson: currentGraphJson } : tab
+    ));
+  };
 
   const updateElementsList = (editorInstance = activeTab.editorInstance) => {
     if (editorInstance) {
@@ -165,84 +219,67 @@ const ErdEditor = () => {
     <div className="container-fluid h-100">
       <div className="row">
         <div className="col-12">
-
-        {tabs.map(tab => (
-      <button key={tab.id} onClick={() => setActiveTabId(tab.id)} className={activeTabId === tab.id ? 'btn btn-primary' : 'btn btn-secondary'}>
-        {tab.name}
-      </button>
-    ))}
-    <button onClick={addNewTab} className="btn btn-success">+ New Tab</button>
-
+          {tabs.map(tab => (
+            <button key={tab.id} onClick={() => setActiveTabId(tab.id)} className={activeTabId === tab.id ? 'btn btn-primary' : 'btn btn-secondary'}>
+              {tab.name}
+            </button>
+          ))}
+          <button onClick={addNewTab} className="btn btn-success">+ New Tab</button>
           <button onClick={handleCreateLinks} className="btn btn-primary m-1">
-            Create Links Based on Shared Properties
-          </button>
-          <button
-            onClick={() => setShowOntologyModal(true)}
-            className="btn btn-primary m-1"
-          >
-            Open Ontology Modal
-          </button>
-          <button
-            onClick={() => activeTab.editorInstance?.removeElement(selectedElementId)}
-            className="btn btn-danger m-1"
-          >
-            Remove Selected Element
-          </button>
-          <button
-            onClick={() => activeTab.editorInstance?.addElement("Entity")}
-            className="btn btn-secondary m-1"
-          >
-            Add Entity
-          </button>
-          <button
-            onClick={() => activeTab.editorInstance?.addElement("Relationship")}
-            className="btn btn-secondary m-1"
-          >
-            Add Relationship
-          </button>
-          <button
-            onClick={() => activeTab.editorInstance?.addElement("CustomShape")}
-            className="btn btn-secondary m-1"
-          >
-            Add Custom Shape
-          </button>
-          <button
-            onClick={() => exportGraph(activeTab.editorInstance.graph)}
-            className="btn btn-success m-1"
-          >
-            Export ERD
-          </button>
-          <input
-            type="file"
-            accept=".json"
-            onChange={(e) => handleFileChosen(e.target.files[0])}
-            className="m-1"
-          />
+Create Links Based on Shared Properties
+</button>
+<button
+onClick={() => setShowOntologyModal(true)}
+className="btn btn-primary m-1"
+>
+Open Ontology Modal
+</button>
+<button
+onClick={() => activeTab.editorInstance?.removeElement(selectedElementId)}
+className="btn btn-danger m-1"
+>
+Remove Selected Element
+</button>
+<button
+onClick={() => activeTab.editorInstance?.addElement("Entity")}
+className="btn btn-secondary m-1"
+>
+Add Entity
+</button>
+<button
+onClick={() => activeTab.editorInstance?.addElement("Relationship")}
+className="btn btn-secondary m-1"
+>
+Add Relationship
+</button>
+<button
+onClick={() => activeTab.editorInstance?.addElement("CustomShape")}
+className="btn btn-secondary m-1"
+>
+Add Custom Shape
+</button>
+<button
+onClick={() => exportGraph(activeTab.editorInstance.graph)}
+className="btn btn-success m-1"
+>
+Export ERD
+</button>
+<input
+type="file"
+accept=".json"
+onChange={(e) => handleFileChosen(e.target.files[0])}
+className="m-1"
+/>
         </div>
       </div>
       <div className="row h-100">
-        <div
-          className="col-md-2 p-2"
-          style={{ overflowY: "auto", background: "#eaeaea" }}
-        >
-          <TreeView
-            elements={elements}
-            onElementSelect={handleElementSelect}
-            selectedElementId={selectedElementId}
-          />
+        <div className="col-md-2 p-2" style={{ overflowY: "auto", background: "#eaeaea" }}>
+          <TreeView elements={elements} onElementSelect={handleElementSelect} selectedElementId={selectedElementId} />
         </div>
-
         <div className="col-md-7 p-2" style={{ overflowY: "auto" }}>
-          <div
-            ref={workspaceRef}
-            style={{ height: "600px", background: "#f3f3f3" }}
-          ></div>
+          <div ref={workspaceRef} style={{ height: "600px", background: "#f3f3f3" }}></div>
         </div>
-
-        <div
-          className="col-md-3 p-2"
-          style={{ overflowY: "auto", background: "#eaeaea" }}
-        >
+        <div className="col-md-3 p-2" style={{ overflowY: "auto", background: "#eaeaea" }}>
           {renderSelectedElementDetails()}
         </div>
         {isModalOpen && (
@@ -250,24 +287,19 @@ const ErdEditor = () => {
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
             onSubmit={handleModalSubmit}
-            initialName={
-              activeTab.editorInstance?.graph.getCell(currentElementId)?.attr("text/text") || ""
-            }
-            initialDescription={
-              activeTab.editorInstance?.graph.getCell(currentElementId)?.prop("description") || ""
-            }
+            initialName={currentElementId ? "Element Name" : ""}
+            initialDescription={currentElementId ? "Element Description" : ""}
             initialProperties={customProperties}
           />
         )}
         {showOntologyModal && (
-          <OntologyModal
-            show={showOntologyModal}
-            onClose={() => setShowOntologyModal(false)}
-          />
+          <OntologyModal show={showOntologyModal} onClose={() => setShowOntologyModal(false)} />
         )}
       </div>
     </div>
   );
 };
-
 export default ErdEditor;
+
+
+
