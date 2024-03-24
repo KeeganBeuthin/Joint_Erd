@@ -50,23 +50,27 @@ const ErdEditor = () => {
   }, [editor, activeTabId, tabs]);
 
   useEffect(() => {
-    const currentTab = tabs.find(tab => tab.id === activeTabId);
-    if (workspaceRef.current && !activeTab.editorInstance) {
-      const editorInstance = JointJSEditor(
-        workspaceRef.current,
-        handleElementDoubleClick,
-        handleElementClick
-      );
-      setTabs(tabs.map(tab => tab.id === activeTabId ? { ...tab, editorInstance } : tab));
+    if (workspaceRef.current) {
+      if (!activeTab.editorInstance) {
+        // Initialize a new editor instance for a new tab
+        const editorInstance = JointJSEditor(workspaceRef.current, handleElementDoubleClick, handleElementClick);
+        setTabs(tabs.map(tab => tab.id === activeTabId ? { ...tab, editorInstance } : tab));
+      } else {
+        // Here, make sure the UI is correctly updated to reflect the active tab's state
+        // This might involve resetting selected elements, clearing modals, etc.
+        updateElementsList(activeTab.editorInstance);
+      }
     }
   }, [activeTabId, tabs]);
 
-  const updateElementsList = (editorInstance) => {
-    const updatedElements = editorInstance.graph.getElements().map((el) => ({
-      id: el.id,
-      name: el.attr("text/text") || `Unnamed ${el.get("type")}`,
-    }));
-    setElements(updatedElements);
+  const updateElementsList = (editorInstance = activeTab.editorInstance) => {
+    if (editorInstance) {
+      const updatedElements = editorInstance.graph.getElements().map((el) => ({
+        id: el.id,
+        name: el.attr("text/text") || `Unnamed ${el.get("type")}`,
+      }));
+      setElements(updatedElements);
+    }
   };
 
   const handleElementDoubleClick = (cellView) => {
@@ -139,6 +143,9 @@ const ErdEditor = () => {
   };
 
   const renderSelectedElementDetails = () => {
+    if (!activeTab.editorInstance) {
+      return <ElementDetails element={null} />;
+    }
     const element = selectedElementId
       ? activeTab.editorInstance.graph.getCell(selectedElementId.split("?")[0])
       : null;
