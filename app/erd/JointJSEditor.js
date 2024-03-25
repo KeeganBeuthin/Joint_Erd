@@ -47,9 +47,9 @@ const JointJSEditor = (container, openModalCallback, onElementClick, activeTabId
     CustomShape: 0,
   };
 
-  function renderPaper(container) {
-    this.paper.setElement(container);
-    // Additional logic might be required to refresh or rerender the paper if necessary
+  function renderPaper() {
+    this.paper.model = this.graph;
+    this.paper.render();
   }
 
   const findElementsToLink = () => {

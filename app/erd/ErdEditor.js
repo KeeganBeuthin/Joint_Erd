@@ -1,5 +1,5 @@
 // erd/ErdEditor.js
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import JointJSEditor from "./JointJSEditor";
 import { exportGraph } from "./JointJSEditor";
 import OntologyModal from "./OntologyModal";
@@ -26,12 +26,29 @@ const ErdEditor = () => {
 
   const activeTab = tabs.find(tab => tab.id === activeTabId) || {};
 
-  const addNewTab = () => {
-    saveCurrentGraphState()
-    const newTabId = tabs.length + 1;
-    setTabs([...tabs, { id: newTabId, name: `Tab ${newTabId}`, editorInstance: null }]);
-    setActiveTabId(newTabId);
+  function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
   };
+}
+
+
+const debouncedSaveCurrentGraphState = useCallback(debounce(() => saveCurrentGraphState(), 250), []);
+const debouncedUpdateElementsList = useCallback(debounce(() => updateElementsList(), 250), []);
+
+const addNewTab = () => {
+  saveCurrentGraphState();
+  const newTabId = tabs.length + 1;
+  const newTabName = `Tab ${newTabId}`;
+  setTabs([...tabs, { id: newTabId, name: newTabName, editorInstance: null }]);
+  setActiveTabId(newTabId);
+};
 
   useEffect(() => {
     if (workspaceRef.current && !activeTab.editorInstance) {
@@ -51,70 +68,65 @@ const ErdEditor = () => {
   }, [editor, activeTabId, tabs]);
 
   useEffect(() => {
-    console.log(`Active tab ID changed to: ${activeTabId}`);
-    const activeTab = tabs.find(tab => tab.id === activeTabId);
-    console.log(`Found active tab: `, activeTab);
-  
-    if (workspaceRef.current && activeTab?.editorInstance) {
-      console.log("Setting paper element for the active tab's editor instance.");
-      activeTab.editorInstance.paper.setElement(workspaceRef.current);
-  
-      if (activeTab.graphJson) {
-        console.log("Loading graph JSON into the active tab's editor instance:", activeTab.graphJson);
-        activeTab.editorInstance.graph.fromJSON(activeTab.graphJson);
-        console.log("Graph JSON loaded successfully.");
-      } else {
-        console.log("No graph JSON data found for the active tab.");
-      }
-  
-      updateElementsList(activeTab.editorInstance);
-      console.log("Updated elements list based on the current graph model.");
-    } else {
-      console.log("Workspace reference or active tab's editor instance not found.");
-    }
-  }, [activeTabId, tabs]);
-
-  useEffect(() => {
     if (activeTab.editorInstance) {
       const graph = activeTab.editorInstance.graph;
-      const onGraphChange = () => saveCurrentGraphState();
-  
-      graph.on('add remove change', onGraphChange);
-  
-      // Clean up the event listener when the component unmounts or the active tab changes
-      return () => graph.off('add remove change', onGraphChange);
+
+      // Define a comprehensive change handler that covers all event types
+      const onGraphChange = () => {
+        debouncedSaveCurrentGraphState();
+        debouncedUpdateElementsList();
+      };
+console.log('yes')
+      // Subscribe to all relevant events
+      graph.on('all', onGraphChange); // Assuming 'all' catches every change, adjust as per your graph library's API
+
+      // Cleanup function to remove event listeners
+      return () => graph.off('all', onGraphChange);
     }
-  }, [activeTab.editorInstance, activeTabId])
+  }, [debouncedSaveCurrentGraphState, debouncedUpdateElementsList, activeTab.editorInstance]);
   
   const switchTab = (newTabId) => {
     saveCurrentGraphState(); // Save the current graph state before switching
     setActiveTabId(newTabId);
+  
+    const newActiveTab = tabs.find((tab) => tab.id === newTabId);
+    if (newActiveTab && newActiveTab.editorInstance && newActiveTab.graphJson) {
+      newActiveTab.editorInstance.graph.fromJSON(newActiveTab.graphJson);
+      newActiveTab.editorInstance.renderPaper();
+    }
   };
-
+  
   useEffect(() => {
-    // This effect ensures that the appropriate editor instance is initialized and displayed when the tab is switched.
     if (workspaceRef.current && !activeTab.editorInstance) {
-      // Initialize editor instance if not already done
       const newEditorInstance = JointJSEditor(workspaceRef.current, handleElementDoubleClick, handleElementClick, activeTabId);
-      // Update the tabs state with this new editor instance for the active tab
-      const updatedTabs = tabs.map(tab => tab.id === activeTabId ? { ...tab, editorInstance: newEditorInstance } : tab);
+      const updatedTabs = tabs.map(tab =>
+        tab.id === activeTabId ? { ...tab, editorInstance: newEditorInstance } : tab
+      );
       setTabs(updatedTabs);
-      // Ensure the paper for the newly activated tab is attached to the workspaceRef
       newEditorInstance.paper.setElement(workspaceRef.current);
+  
+      // Load graph data from graphJson if it exists
+      if (activeTab.graphJson) {
+        newEditorInstance.graph.fromJSON(activeTab.graphJson);
+        newEditorInstance.renderPaper();
+      }
     } else if (workspaceRef.current && activeTab.editorInstance) {
-      // When switching tabs, if the editor instance already exists, we simply need to ensure its paper is displayed
       activeTab.editorInstance.paper.setElement(workspaceRef.current);
       updateElementsList(activeTab.editorInstance);
+      activeTab.editorInstance.renderPaper();
     }
-    // The dependency array here ensures this effect runs only when the activeTabId changes, or the tabs array is updated
   }, [activeTabId, tabs]);
 
 
   const saveCurrentGraphState = () => {
-    const currentGraphJson = activeTab.editorInstance?.graph.toJSON();
-    setTabs(tabs.map(tab =>
-      tab.id === activeTabId ? { ...tab, graphJson: currentGraphJson } : tab
-    ));
+    if (activeTab.editorInstance) {
+      const currentGraphJson = activeTab.editorInstance.graph.toJSON();
+      setTabs(prevTabs =>
+        prevTabs.map(tab =>
+          tab.id === activeTabId ? { ...tab, graphJson: currentGraphJson } : tab
+        )
+      );
+    }
   };
 
   const updateElementsList = (editorInstance = activeTab.editorInstance) => {
@@ -218,13 +230,19 @@ const ErdEditor = () => {
   return (
     <div className="container-fluid h-100">
       <div className="row">
-        <div className="col-12">
-          {tabs.map(tab => (
-            <button key={tab.id} onClick={() => setActiveTabId(tab.id)} className={activeTabId === tab.id ? 'btn btn-primary' : 'btn btn-secondary'}>
-              {tab.name}
-            </button>
-          ))}
-          <button onClick={addNewTab} className="btn btn-success">+ New Tab</button>
+      <div className="col-12">
+  {tabs.map((tab) => (
+    <button
+      key={tab.id}
+      onClick={() => switchTab(tab.id)}
+      className={activeTabId === tab.id ? 'btn btn-primary' : 'btn btn-secondary'}
+    >
+      {tab.name}
+    </button>
+  ))}
+  <button onClick={addNewTab} className="btn btn-success">
+    + New Tab
+  </button>
           <button onClick={handleCreateLinks} className="btn btn-primary m-1">
 Create Links Based on Shared Properties
 </button>
