@@ -4,7 +4,7 @@ import JointJSEditor from "./JointJSEditor";
 import { exportGraph } from "./JointJSEditor";
 import OntologyModal from "./OntologyModal";
 import InfoModal from "./InfoModal";
-import { Container, Row, Col, Button, Modal, Form } from "react-bootstrap";
+import { Container, Row, Col, Button, Modal, Form, Tabs, Tab } from "react-bootstrap"; 
 import "bootstrap/dist/css/bootstrap.min.css";
 import TreeView from "./TreeView";
 import ElementDetails from "./ElementDetails";
@@ -19,21 +19,53 @@ const ErdEditor = () => {
   const [selectedElementId, setSelectedElementId] = useState("");
   const [customProperties, setCustomProperties] = useState([]);
   const [selectedElement, setSelectedElement] = useState(null);
+  const [editors, setEditors] = useState([{ id: 'editor-0', instance: null, elements: [] }]);
+  const [activeTab, setActiveTab] = useState('editor-0');
+  const editorRefs = useRef({});
 
   useEffect(() => {
-    if (workspaceRef.current && !editor) {
-      const editorInstance = JointJSEditor(
-        workspaceRef.current,
+    const firstEditorId = 'editor-0';
+    if (!editorRefs.current[firstEditorId]) {
+      editorRefs.current[firstEditorId] = React.createRef();
+    }
+    if (editorRefs.current[firstEditorId].current && !editors[0].instance) {
+      const newEditor = JointJSEditor(
+        editorRefs.current[firstEditorId].current,
         handleElementDoubleClick,
         handleElementClick
       );
-      setEditor(editorInstance);
-      editorInstance.graph.on("add remove change:attrs", () =>
-        updateElementsList(editorInstance)
-      );
-      updateElementsList(editorInstance);
+      setEditors([{ id: 'editor-0', instance: newEditor, elements: [] }]);
     }
-  }, [editor]);
+  }, [editors]);
+
+
+
+  const addTab = () => {
+    const newTabId = `editor-${editors.length}`;
+    setEditors([...editors, { id: newTabId, instance: null, elements: [] }]);
+    setActiveTab(newTabId);
+    // Initialize a new editor for the new tab after render
+    setTimeout(() => initializeEditorForTab(newTabId), 0);
+  };
+
+
+  const initializeEditorForTab = (tabId) => {
+    if (!editorRefs.current[tabId]) {
+      editorRefs.current[tabId] = React.createRef();
+    }
+    const container = editorRefs.current[tabId].current;
+    if (container && !editors.find(editor => editor.id === tabId).instance) {
+      const editorInstance = JointJSEditor(
+        container,
+        handleElementDoubleClick,
+        handleElementClick
+      );
+      setEditors(editors.map(editor =>
+        editor.id === tabId ? { ...editor, instance: editorInstance } : editor
+      ));
+    }
+  };
+
 
   const updateElementsList = (editorInstance) => {
     const updatedElements = editorInstance.graph.getElements().map((el) => ({
@@ -66,11 +98,12 @@ const ErdEditor = () => {
     setSelectedElementId(elementId);
   };
   const handleCreateLinks = () => {
-    if (editor) {
-      editor.createLinksForSharedProperties();
+    const activeEditor = editors.find(editor => editor.id === activeTab)?.instance;
+    if (activeEditor) {
+      activeEditor.createLinksForSharedProperties();
     }
   };
-
+  
   const handleFileRead = async (e) => {
     const content = e.target.result;
     const graphJson = JSON.parse(content);
@@ -128,10 +161,37 @@ const ErdEditor = () => {
     return <ElementDetails element={null} />;
   };
 
+  const addElementToActiveGraph = (elementType) => {
+    const activeEditor = editors.find(editor => editor.id === activeTab)?.instance;
+    if (activeEditor) {
+      activeEditor.addElement(elementType);
+    }
+  };
+
+  const exportActiveGraph = () => {
+    const activeEditor = editors.find(editor => editor.id === activeTab)?.instance;
+    if (activeEditor && activeEditor.graph) {
+      exportGraph(activeEditor.graph);
+    }
+  };
+ 
+  const renderTabs = () => {
+    return (
+      <Tabs activeKey={activeTab} onSelect={setActiveTab} className="mb-3">
+        {editors.map((editor, index) => (
+          <Tab eventKey={editor.id} title={`Graph ${index + 1}`} key={editor.id}>
+            <div ref={editorRefs.current[editor.id]} style={{ height: "600px", background: "#f3f3f3" }}></div>
+          </Tab>
+        ))}
+      </Tabs>
+    );
+  };
+
   return (
     <div className="container-fluid h-100">
       <div className="row">
         <div className="col-12">
+        <Button onClick={addTab} className="m-1">Add New Tab</Button>
           <button onClick={handleCreateLinks} className="btn btn-primary m-1">
             Create Links Based on Shared Properties
           </button>
@@ -148,25 +208,25 @@ const ErdEditor = () => {
             Remove Selected Element
           </button>
           <button
-            onClick={() => editor?.addElement("Entity")}
+            onClick={() => addElementToActiveGraph("Entity")}
             className="btn btn-secondary m-1"
           >
             Add Entity
           </button>
           <button
-            onClick={() => editor?.addElement("Relationship")}
+            onClick={() => addElementToActiveGraph("Relationship")}
             className="btn btn-secondary m-1"
           >
             Add Relationship
           </button>
           <button
-            onClick={() => editor?.addElement("CustomShape")}
+            onClick={() => addElementToActiveGraph("CustomShape")}
             className="btn btn-secondary m-1"
           >
             Add Custom Shape
           </button>
           <button
-            onClick={() => exportGraph(editor.graph)}
+           onClick={exportActiveGraph}
             className="btn btn-success m-1"
           >
             Export ERD
@@ -179,25 +239,30 @@ const ErdEditor = () => {
           />
         </div>
       </div>
+     
       <div className="row h-100">
+        
         <div
           className="col-md-2 p-2"
           style={{ overflowY: "auto", background: "#eaeaea" }}
         >
+         
           <TreeView
             elements={elements}
             onElementSelect={handleElementSelect}
             selectedElementId={selectedElementId}
           />
+         
         </div>
-
+        
         <div className="col-md-7 p-2" style={{ overflowY: "auto" }}>
+        {renderTabs()}
           <div
             ref={workspaceRef}
             style={{ height: "600px", background: "#f3f3f3" }}
           ></div>
         </div>
-
+        
         <div
           className="col-md-3 p-2"
           style={{ overflowY: "auto", background: "#eaeaea" }}
