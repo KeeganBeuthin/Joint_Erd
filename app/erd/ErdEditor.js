@@ -21,67 +21,99 @@ const ErdEditor = () => {
   const [selectedElement, setSelectedElement] = useState(null);
   const [editors, setEditors] = useState([{ id: 'editor-0', instance: null, elements: [] }]);
   const [activeTab, setActiveTab] = useState('editor-0');
+  const [elementsByTab, setElementsByTab] = useState({ 'editor-0': [] });
+  const [elementName, setElementName] = useState('default')
+  const [elementDescription, setElementDescription] = useState('default')
+
   const editorRefs = useRef({});
 
   useEffect(() => {
-    const firstEditorId = 'editor-0';
-    if (!editorRefs.current[firstEditorId]) {
-      editorRefs.current[firstEditorId] = React.createRef();
-    }
-    if (editorRefs.current[firstEditorId].current && !editors[0].instance) {
-      const newEditor = JointJSEditor(
-        editorRefs.current[firstEditorId].current,
-        handleElementDoubleClick,
-        handleElementClick
-      );
-      setEditors([{ id: 'editor-0', instance: newEditor, elements: [] }]);
-    }
+    const initializeFirstEditor = () => {
+      const firstEditorId = 'editor-0';
+      if (!editorRefs.current[firstEditorId]) {
+        editorRefs.current[firstEditorId] = React.createRef();
+      }
+      if (editorRefs.current[firstEditorId].current && !editors[0]?.instance) {
+        const newEditor = JointJSEditor(
+          editorRefs.current[firstEditorId].current,
+          handleElementDoubleClick,
+          handleElementClick
+        );
+        console.log("First editor initialized:", newEditor);
+        setEditors([{ id: 'editor-0', instance: newEditor, elements: [] }]);
+      }
+    };
+  
+    initializeFirstEditor();
   }, [editors]);
 
-
-
-  const addTab = () => {
-    const newTabId = `editor-${editors.length}`;
-    setEditors([...editors, { id: newTabId, instance: null, elements: [] }]);
-    setActiveTab(newTabId);
-    // Initialize a new editor for the new tab after render
-    setTimeout(() => initializeEditorForTab(newTabId), 0);
-  };
-
+  useEffect(() => {
+    console.log(`Active tab changed to: ${activeTab}`);
+    const activeEditor = editors.find(editor => editor.id === activeTab)?.instance;
+    if (activeEditor) {
+      console.log("Updating elements list for active tab:", activeTab);
+      updateElementsList(activeEditor, activeTab);
+    }
+  }, [activeTab, editors]);
 
   const initializeEditorForTab = (tabId) => {
     if (!editorRefs.current[tabId]) {
       editorRefs.current[tabId] = React.createRef();
     }
     const container = editorRefs.current[tabId].current;
-    if (container && !editors.find(editor => editor.id === tabId).instance) {
+    // Check if the editor for the tabId exists before trying to access its properties
+    const editorForTab = editors.find(editor => editor.id === tabId);
+    if (container && (!editorForTab || !editorForTab.instance)) {
       const editorInstance = JointJSEditor(
         container,
         handleElementDoubleClick,
         handleElementClick
       );
-      setEditors(editors.map(editor =>
+      setEditors(prevEditors => prevEditors.map(editor =>
         editor.id === tabId ? { ...editor, instance: editorInstance } : editor
       ));
+      // Ensure elements are updated for the new editor
+      updateElementsList(editorInstance, tabId);
     }
   };
 
+  
+  const addTab = () => {
+    const newTabId = `editor-${editors.length}`;
+    setEditors([...editors, { id: newTabId, instance: null, elements: [] }]);
+    setActiveTab(newTabId);
+    // Initialize a new editor for the new tab after render
+    setTimeout(() => initializeEditorForTab(newTabId), 0);
+    
+  };
 
-  const updateElementsList = (editorInstance) => {
+
+ 
+
+  const updateElementsList = (editorInstance, tabId) => {
+    console.log(`Updating elements list for: ${tabId}`);
+    if (!editorInstance) return;
     const updatedElements = editorInstance.graph.getElements().map((el) => ({
       id: el.id,
       name: el.attr("text/text") || `Unnamed ${el.get("type")}`,
     }));
-    setElements(updatedElements);
+    setElementsByTab(prev => ({ ...prev, [tabId]: updatedElements }));
+    console.log(`Elements updated for: ${tabId}`, updatedElements);
   };
 
   const handleElementDoubleClick = (cellView) => {
+    const activeEditor = editors.find(editor => editor.id === activeTab)?.instance;
+    if (!activeEditor) return;
+  
     const element = cellView.model;
+    console.log("Double-clicked element:", element);
+    
     setCurrentElementId(element.id);
     setCustomProperties(element.prop("customProperties") || []);
-    setIsModalOpen(true);
+    setElementName(element.attr("text/text") || "");
+    setElementDescription(element.prop("description") || "");
   
-    // You might need to adjust this further based on how your app and JointJSEditor handle double clicks
+    setIsModalOpen(true);
   };
 
   const handleModalSubmit = ({ name, description, properties }) => {
@@ -97,12 +129,10 @@ const ErdEditor = () => {
     setIsModalOpen(false);
   };
 
+
   const handleElementClick = (elementId) => {
-    const activeEditor = editors.find(editor => editor.id === activeTab)?.instance;
-    if (activeEditor) {
-      // Assuming a function like this exists in your JointJSEditor to handle click events
-      activeEditor.handleElementClick(elementId);
-    }
+    console.log("Element clicked:", elementId);
+    setSelectedElementId(elementId);
   };
 
   const handleCreateLinks = () => {
@@ -136,24 +166,32 @@ const ErdEditor = () => {
     fileReader.readAsText(file);
   };
 
-  const handleElementSelect = (elementId) => {
-    setSelectedElementId(elementId);
+  
 
-    const element = editor.graph.getCell(elementId);
-    if (element) {
-      element.on(
-        "change:attrs change:description change:customProperties",
-        () => {
-          setSelectedElementId(elementId + "?update=" + Math.random());
+  const handleElementSelect = (elementId) => {
+    const activeEditor = editors.find(editor => editor.id === activeTab)?.instance;
+    if (activeEditor) {
+        setSelectedElementId(elementId);
+
+        const element = activeEditor.graph.getCell(elementId);
+        if (element) {
+          element.on(
+            "change:attrs change:description change:customProperties",
+            () => {
+              setSelectedElementId(elementId + "?update=" + Math.random());
+            })
         }
-      );
     }
-  };
+};
 
   const renderSelectedElementDetails = () => {
+    const activeEditor = editors.find(editor => editor.id === activeTab)?.instance;
+    if (!activeEditor) return <ElementDetails element={null} />;
+    
     const element = selectedElementId
-      ? editor.graph.getCell(selectedElementId.split("?")[0])
+      ? activeEditor.graph.getCell(selectedElementId.split("?")[0])
       : null;
+      
     if (element) {
       const elementDetails = {
         id: element.id,
@@ -252,12 +290,12 @@ const ErdEditor = () => {
           style={{ overflowY: "auto", background: "#eaeaea" }}
         >
          
-          <TreeView
-            elements={elements}
-            onElementSelect={handleElementSelect}
-            selectedElementId={selectedElementId}
-          />
-         
+         <TreeView
+  elements={elementsByTab[activeTab] || []}
+  onElementSelect={handleElementSelect}
+  selectedElementId={selectedElementId}
+/>
+
         </div>
         
         <div className="col-md-7 p-2" style={{ overflowY: "auto" }}>
@@ -275,19 +313,15 @@ const ErdEditor = () => {
           {renderSelectedElementDetails()}
         </div>
         {isModalOpen && (
-          <InfoModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            onSubmit={handleModalSubmit}
-            initialName={
-              editor?.graph.getCell(currentElementId)?.attr("text/text") || ""
-            }
-            initialDescription={
-              editor?.graph.getCell(currentElementId)?.prop("description") || ""
-            }
-            initialProperties={customProperties}
-          />
-        )}
+  <InfoModal
+    isOpen={isModalOpen}
+    onClose={() => setIsModalOpen(false)}
+    onSubmit={handleModalSubmit}
+    initialName={elementName}
+    initialDescription={elementDescription}
+    initialProperties={customProperties}
+  />
+)}
         {showOntologyModal && (
           <OntologyModal
             show={showOntologyModal}
