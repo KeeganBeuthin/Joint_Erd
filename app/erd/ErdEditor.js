@@ -56,6 +56,29 @@ const ErdEditor = () => {
     }
   }, [activeTab, editors]);
 
+  useEffect(() => {
+    // This useEffect will watch for changes in the activeTab and initialize the editor for the new tab
+    const tabId = activeTab;
+    if (!editorRefs.current[tabId]) {
+        editorRefs.current[tabId] = React.createRef();
+    }
+    const container = editorRefs.current[tabId]?.current;
+    const editorForTab = editors.find(editor => editor.id === tabId);
+    if (container && !editorForTab?.instance) {
+        const editorInstance = JointJSEditor(
+            container,
+            handleElementDoubleClick,
+            handleElementClick
+        );
+        // Update the instance for the newly active tab
+        setEditors(prevEditors => prevEditors.map(editor =>
+            editor.id === tabId ? { ...editor, instance: editorInstance } : editor
+        ));
+        // Since a new editor was just initialized, update its elements list
+        updateElementsList(editorInstance, tabId);
+    }
+}, [activeTab, editors]);
+
   const initializeEditorForTab = (tabId) => {
     if (!editorRefs.current[tabId]) {
       editorRefs.current[tabId] = React.createRef();
@@ -80,12 +103,11 @@ const ErdEditor = () => {
   
   const addTab = () => {
     const newTabId = `editor-${editors.length}`;
+    // Add the new tab with a placeholder for the instance
     setEditors([...editors, { id: newTabId, instance: null, elements: [] }]);
     setActiveTab(newTabId);
-    // Initialize a new editor for the new tab after render
-    setTimeout(() => initializeEditorForTab(newTabId), 0);
-    
-  };
+    // Note: Removed the setTimeout call; we'll ensure the editor is initialized in useEffect.
+};
 
 
  
@@ -217,6 +239,19 @@ const ErdEditor = () => {
       exportGraph(activeEditor.graph);
     }
   };
+
+  const removeSelectedElementFromActiveGraph = () => {
+    const activeEditor = editors.find(editor => editor.id === activeTab)?.instance;
+    if (activeEditor && selectedElementId) {
+      activeEditor.removeElement(selectedElementId);
+      // After removing, update the elements list for the active graph
+      updateElementsList(activeEditor, activeTab);
+      // Optionally, clear the selection or handle post-removal UI updates
+      setSelectedElementId("");
+      setElementName('default'); // Reset element name display
+      setElementDescription('default'); // Reset element description display
+    }
+  };
  
   const renderTabs = () => {
     return (
@@ -245,11 +280,11 @@ const ErdEditor = () => {
             Open Ontology Modal
           </button>
           <button
-            onClick={() => editor?.removeElement(selectedElementId)}
-            className="btn btn-danger m-1"
-          >
-            Remove Selected Element
-          </button>
+  onClick={removeSelectedElementFromActiveGraph}
+  className="btn btn-danger m-1"
+>
+  Remove Selected Element
+</button>
           <button
             onClick={() => addElementToActiveGraph("Entity")}
             className="btn btn-secondary m-1"
