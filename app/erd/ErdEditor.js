@@ -80,11 +80,14 @@ const ErdEditor = () => {
     setCurrentElementId(element.id);
     setCustomProperties(element.prop("customProperties") || []);
     setIsModalOpen(true);
+  
+    // You might need to adjust this further based on how your app and JointJSEditor handle double clicks
   };
 
   const handleModalSubmit = ({ name, description, properties }) => {
-    if (currentElementId && editor) {
-      const element = editor.graph.getCell(currentElementId);
+    const activeEditor = editors.find(editor => editor.id === activeTab)?.instance;
+    if (currentElementId && activeEditor) {
+      const element = activeEditor.graph.getCell(currentElementId);
       if (element) {
         element.attr("text/text", name);
         element.prop("description", description);
@@ -95,8 +98,13 @@ const ErdEditor = () => {
   };
 
   const handleElementClick = (elementId) => {
-    setSelectedElementId(elementId);
+    const activeEditor = editors.find(editor => editor.id === activeTab)?.instance;
+    if (activeEditor) {
+      // Assuming a function like this exists in your JointJSEditor to handle click events
+      activeEditor.handleElementClick(elementId);
+    }
   };
+
   const handleCreateLinks = () => {
     const activeEditor = editors.find(editor => editor.id === activeTab)?.instance;
     if (activeEditor) {
@@ -107,23 +115,20 @@ const ErdEditor = () => {
   const handleFileRead = async (e) => {
     const content = e.target.result;
     const graphJson = JSON.parse(content);
-
-    if (editor && editor.graph) {
+    const activeEditor = editors.find(editor => editor.id === activeTab)?.instance;
+  
+    if (activeEditor && activeEditor.graph) {
       try {
-        editor.graph.fromJSON(graphJson);
+        activeEditor.graph.fromJSON(graphJson);
         console.log("Graph imported successfully.");
-        const importedElements = editor.graph.getElements().map((el) => ({
-          id: el.id,
-          name:
-            el.attr("text/text") ||
-            `Unnamed ${el.get("type")} ${el.id.substring(0, 8)}`,
-        }));
-        setElements(importedElements);
+        // After importing, you might need to update the UI to reflect the new elements
+        updateElementsList(activeEditor); // Assuming updateElementsList is adjusted to work with the active editor
       } catch (error) {
         console.error("Error importing graph:", error);
       }
     }
   };
+  
 
   const handleFileChosen = (file) => {
     let fileReader = new FileReader();
