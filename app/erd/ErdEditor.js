@@ -124,20 +124,21 @@ const ErdEditor = () => {
   };
 
   const handleElementDoubleClick = (cellView) => {
-    const activeEditor = editors.find(editor => editor.id === activeTab)?.instance;
-    if (!activeEditor) return;
+    console.log("Element double-clicked:", cellView.model.id); // Debug log
   
     const element = cellView.model;
-    console.log("Double-clicked element:", element);
-    
+    if (!element) {
+      console.log("Double-clicked element not found.");
+      return;
+    }
+  
     setCurrentElementId(element.id);
     setCustomProperties(element.prop("customProperties") || []);
     setElementName(element.attr("text/text") || "");
     setElementDescription(element.prop("description") || "");
   
-    setIsModalOpen(true);
+    setIsModalOpen(true); // This should trigger the modal to open
   };
-
   const handleModalSubmit = ({ name, description, properties }) => {
     const activeEditor = editors.find(editor => editor.id === activeTab)?.instance;
     if (currentElementId && activeEditor) {
