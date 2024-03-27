@@ -175,7 +175,7 @@ const ErdEditor = () => {
         activeEditor.graph.fromJSON(graphJson);
         console.log("Graph imported successfully.");
         // After importing, you might need to update the UI to reflect the new elements
-        updateElementsList(activeEditor); // Assuming updateElementsList is adjusted to work with the active editor
+        updateElementsList(activeEditor, activeTab); // Assuming updateElementsList is adjusted to work with the active editor
       } catch (error) {
         console.error("Error importing graph:", error);
       }
@@ -231,6 +231,7 @@ const ErdEditor = () => {
     const activeEditor = editors.find(editor => editor.id === activeTab)?.instance;
     if (activeEditor) {
       activeEditor.addElement(elementType);
+      updateElementsList(activeEditor, activeTab);
     }
   };
 
