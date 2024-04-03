@@ -7,6 +7,10 @@
   min-height: 100vh;
 }
 
+.custom-dropdown-nav {
+  z-index: 1050; /* This is just an example value; Bootstrap's modal uses 1050 */
+}
+
 .description {
   display: inherit;
   justify-content: inherit;

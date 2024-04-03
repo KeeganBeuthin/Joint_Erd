@@ -282,7 +282,7 @@ const ErdEditor = () => {
           >
             <div
               ref={editorRefs.current[editor.id]}
-              style={{ height: "600px", background: "#f3f3f3" }}
+              style={{ height: "1000px", background: "#f3f3f3" }}
             ></div>
           </Tab>
         ))}
@@ -293,51 +293,51 @@ const ErdEditor = () => {
   return (
     <div className="container-fluid h-100">
       <div className="row">
-        <div className="col-12">
-          <Button onClick={addTab} className="m-1">
-            Add New Tab
+        <div className="col-12 pb-1">
+          <Button onClick={addTab} className="me-1">
+            Add New graph
           </Button>
-          <button onClick={handleCreateLinks} className="btn btn-primary m-1">
+          <button onClick={handleCreateLinks} className="btn btn-primary me-1">
             Create Links Based on Shared Properties
           </button>
           <button
             onClick={() => setShowOntologyModal(true)}
-            className="btn btn-primary m-1"
+            className="btn btn-primary me-1"
           >
             Open Ontology Modal
           </button>
           <button
             onClick={removeSelectedElementFromActiveGraph}
-            className="btn btn-danger m-1"
+            className="btn btn-danger me-1"
           >
             Remove Selected Element
           </button>
           <button
             onClick={() => addElementToActiveGraph("Entity")}
-            className="btn btn-secondary m-1"
+            className="btn btn-secondary me-1"
           >
             Add Entity
           </button>
           <button
             onClick={() => addElementToActiveGraph("Relationship")}
-            className="btn btn-secondary m-1"
+            className="btn btn-secondary me-1"
           >
             Add Relationship
           </button>
           <button
             onClick={() => addElementToActiveGraph("CustomShape")}
-            className="btn btn-secondary m-1"
+            className="btn btn-secondary me-1"
           >
             Add Custom Shape
           </button>
-          <button onClick={exportActiveGraph} className="btn btn-success m-1">
+          <button onClick={exportActiveGraph} className="btn btn-success me-1">
             Export ERD
           </button>
           <input
             type="file"
             accept=".json"
             onChange={(e) => handleFileChosen(e.target.files[0])}
-            className="m-1"
+            className="me-1"
           />
         </div>
       </div>
