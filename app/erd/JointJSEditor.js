@@ -18,7 +18,7 @@ export const exportGraph = (graph) => {
   downloadAnchorNode.remove();
 };
 
-const JointJSEditor = (container, openModalCallback, onElementClick) => {
+const JointJSEditor = (container, openModalCallback, onElementClick, onElementRightClick) => {
   var graph = new joint.dia.Graph({}, { cellNamespace: joint.shapes });
   var paper = new joint.dia.Paper({
     el: container,
@@ -34,6 +34,17 @@ const JointJSEditor = (container, openModalCallback, onElementClick) => {
 
   paper.on("element:pointerdblclick", openModalCallback);
 
+  paper.on('element:contextmenu', function(elementView, evt) {
+    evt.preventDefault(); // Prevent the default context menu from appearing
+    if (typeof onElementRightClick === 'function') {
+      // Extract the click position and element ID
+      const { x, y } = { x: evt.clientX, y: evt.clientY };
+      const modelId = elementView.model.id;
+      // Invoke the callback with the element ID and click position
+      onElementRightClick(modelId, x, y);
+    }
+  });
+  
   paper.on("element:pointerclick", function (elementView) {
     if (typeof onElementClick === "function") {
       const model = elementView.model;

@@ -25,27 +25,32 @@ const SparqlEditor = () => {
   };
 
   const executeQuery = async () => {
-    const response = await fetch('/api/execute-query', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query,
-        resultsFormat,
-        timeout,
-        options,
-      }),
-    });
+    // Define the DBpedia SPARQL endpoint URL
+    const endpointUrl = 'https://dbpedia.org/sparql';
+    const queryUrl = endpointUrl + "?query=" + encodeURIComponent(query) + "&format=json";
 
-    if (response.ok) {
-      const data = await response.json();
-      setResults(data);
-    } else {
-      // Handle errors or unsuccessful responses
-      console.error('Failed to execute query');
+    try {
+        const response = await fetch(queryUrl, {
+            method: 'GET', // DBpedia endpoint can be accessed using a GET request
+            headers: {
+                'Accept': 'application/sparql-results+json'
+            },
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            setResults(data);
+        } else {
+            // Handle errors or unsuccessful responses
+            console.error('Failed to execute query:', response.statusText);
+            setResults({ error: `Failed to fetch results: ${response.statusText}` });
+        }
+    } catch (error) {
+        // Handle errors related to the fetch operation
+        console.error('Error while fetching results:', error.message);
+        setResults({ error: `Error while fetching results: ${error.message}` });
     }
-  };
+};
 
   const resetEditor = () => {
     setQuery('');

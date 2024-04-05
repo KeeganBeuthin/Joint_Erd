@@ -4,6 +4,8 @@ import JointJSEditor from "./JointJSEditor";
 import { exportGraph } from "./JointJSEditor";
 import OntologyModal from "./OntologyModal";
 import InfoModal from "./InfoModal";
+import ContextMenu from './ContextMenu';
+
 import {
   Container,
   Row,
@@ -35,6 +37,11 @@ const ErdEditor = () => {
   const [elementsByTab, setElementsByTab] = useState({ "editor-0": [] });
   const [elementName, setElementName] = useState("default");
   const [elementDescription, setElementDescription] = useState("default");
+  const [contextMenuState, setContextMenuState] = useState({
+    visible: false,
+    position: { x: 0, y: 0 },
+    targetElementId: null,
+  });
 
   const editorRefs = useRef({});
 
@@ -48,7 +55,8 @@ const ErdEditor = () => {
         const newEditor = JointJSEditor(
           editorRefs.current[firstEditorId].current,
           handleElementDoubleClick,
-          handleElementClick
+          handleElementClick,
+          handleElementRightClick 
         );
         console.log("First editor initialized:", newEditor);
         setEditors([{ id: "editor-0", instance: newEditor, elements: [] }]);
@@ -164,6 +172,16 @@ const ErdEditor = () => {
     console.log("Element clicked:", elementId);
     setSelectedElementId(elementId);
   };
+
+  const handleElementRightClick = (modelId, x, y) => {
+    // Example state update (assuming you have a state for the context menu)
+    setContextMenuState({
+      visible: true,
+      position: { x, y },
+      targetElementId: modelId,
+    });
+  };
+  
 
   const handleCreateLinks = () => {
     const activeEditor = editors.find(
@@ -343,6 +361,24 @@ const ErdEditor = () => {
       </div>
 
       <div className="row h-100">
+
+      <ContextMenu
+      visible={contextMenuState.visible}
+      position={contextMenuState.position}
+      onSelect={(action) => {
+        // Handle context menu action here
+        // For example, delete the selected element:
+        if (action === 'delete') {
+          const activeEditor = editors.find(editor => editor.id === activeTab)?.instance;
+          if (activeEditor && contextMenuState.targetElementId) {
+            activeEditor.removeElement(contextMenuState.targetElementId);
+            // Update any necessary state here, such as closing the context menu
+            setContextMenuState({ ...contextMenuState, visible: false });
+          }
+        }
+        // Handle other actions (copy, changeType) similarly
+      }}
+    />
         <div
           className="col-md-2 p-2"
           style={{ overflowY: "auto", background: "#eaeaea" }}
