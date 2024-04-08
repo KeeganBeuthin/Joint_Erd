@@ -7,10 +7,24 @@ const InfoModal = ({
   initialName,
   initialDescription,
   initialProperties = [],
+  position
 }) => {
   const [name, setName] = useState(initialName);
   const [description, setDescription] = useState(initialDescription);
   const [properties, setProperties] = useState([...initialProperties]);
+  const modalRef = useRef(null);
+  const [adjustedPosition, setAdjustedPosition] = useState(position);
+
+  useEffect(() => {
+    if (isOpen && modalRef.current) {
+      const modalRect = modalRef.current.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      // Adjust position based on the actual width of the modal and viewport
+      if (position.x + modalRect.width > viewportWidth) {
+        setAdjustedPosition({ ...position, x: viewportWidth - modalRect.width - 20 }); // 20px buffer from the edge
+      }
+    }
+  }, [isOpen, position]);
 
   const handlePropertyChange = (index, key, value) => {
     const updatedProperties = properties.map((prop, propIndex) =>
@@ -35,10 +49,11 @@ const InfoModal = ({
 
   return (
     <div
+   ref={modalRef}
       style={{
-        position: "fixed",
-        top: "20%",
-        left: "30%",
+        position: 'absolute',
+        left: `${position.x + 430}px`,
+        top: `${position.y + 50}px`,
         backgroundColor: "white",
         padding: "20px",
         zIndex: 1000,

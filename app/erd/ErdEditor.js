@@ -36,13 +36,15 @@ const ErdEditor = () => {
   const [activeTab, setActiveTab] = useState("editor-0");
   const [elementsByTab, setElementsByTab] = useState({ "editor-0": [] });
   const [elementName, setElementName] = useState("default");
+  const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
   const [elementDescription, setElementDescription] = useState("default");
   const [contextMenuState, setContextMenuState] = useState({
     visible: false,
     position: { x: 0, y: 0 },
     targetElementId: null,
   });
-
+  const [contextMenuVisible, setContextMenuVisible] = useState(false);
+  const [contextMenuPosition, setContextMenuPosition] = useState({x: 0, y: 0});
   const editorRefs = useRef({});
 
   useEffect(() => {
@@ -126,6 +128,22 @@ const ErdEditor = () => {
     setActiveTab(newTabId);
   };
 
+  const showContextMenu = (position) => {
+    setContextMenuPosition(position);
+    setContextMenuVisible(true);
+  };
+
+
+  const hideContextMenu = () => {
+    setContextMenuVisible(false);
+  };
+
+  const handleSelectAction = (action) => {
+    console.log(action);
+    hideContextMenu(); 
+  };
+
+  
   const updateElementsList = (editorInstance, tabId) => {
     console.log(`Updating elements list for: ${tabId}`);
     if (!editorInstance) return;
@@ -139,20 +157,26 @@ const ErdEditor = () => {
 
   const handleElementDoubleClick = (cellView) => {
     console.log("Element double-clicked:", cellView.model.id);
-
+  
     const element = cellView.model;
     if (!element) {
       console.log("Double-clicked element not found.");
       return;
     }
-
+  
+    const bbox = cellView.getBBox();
+    const modalPosition = { x: bbox.x + bbox.width / 2, y: bbox.y + bbox.height / 2 };
+  
     setCurrentElementId(element.id);
     setCustomProperties(element.prop("customProperties") || []);
     setElementName(element.attr("text/text") || "");
     setElementDescription(element.prop("description") || "");
 
+    setModalPosition(modalPosition); 
+  
     setIsModalOpen(true);
   };
+
   const handleModalSubmit = ({ name, description, properties }) => {
     const activeEditor = editors.find(
       (editor) => editor.id === activeTab
@@ -174,7 +198,6 @@ const ErdEditor = () => {
   };
 
   const handleElementRightClick = (modelId, x, y) => {
-    // Example state update (assuming you have a state for the context menu)
     setContextMenuState({
       visible: true,
       position: { x, y },
@@ -366,13 +389,10 @@ const ErdEditor = () => {
       visible={contextMenuState.visible}
       position={contextMenuState.position}
       onSelect={(action) => {
-        // Handle context menu action here
-        // For example, delete the selected element:
         if (action === 'delete') {
           const activeEditor = editors.find(editor => editor.id === activeTab)?.instance;
           if (activeEditor && contextMenuState.targetElementId) {
             activeEditor.removeElement(contextMenuState.targetElementId);
-            // Update any necessary state here, such as closing the context menu
             setContextMenuState({ ...contextMenuState, visible: false });
           }
         }
@@ -404,16 +424,18 @@ const ErdEditor = () => {
         >
           {renderSelectedElementDetails()}
         </div>
-        {isModalOpen && (
-          <InfoModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            onSubmit={handleModalSubmit}
-            initialName={elementName}
-            initialDescription={elementDescription}
-            initialProperties={customProperties}
-          />
-        )}
+     {isModalOpen && (
+  <InfoModal
+    isOpen={isModalOpen}
+    onClose={() => setIsModalOpen(false)}
+    onSubmit={handleModalSubmit}
+    initialName={elementName}
+    initialDescription={elementDescription}
+    initialProperties={customProperties}
+    position={modalPosition} 
+  />
+)}
+
         {showOntologyModal && (
           <OntologyModal
             show={showOntologyModal}
