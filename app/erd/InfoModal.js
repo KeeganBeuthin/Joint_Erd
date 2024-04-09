@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-
+import { Modal, Button, Form } from "react-bootstrap";
 const InfoModal = ({
   isOpen,
   onClose,
@@ -7,7 +7,7 @@ const InfoModal = ({
   initialName,
   initialDescription,
   initialProperties = [],
-  position
+  position,
 }) => {
   const [name, setName] = useState(initialName);
   const [description, setDescription] = useState(initialDescription);
@@ -19,9 +19,11 @@ const InfoModal = ({
     if (isOpen && modalRef.current) {
       const modalRect = modalRef.current.getBoundingClientRect();
       const viewportWidth = window.innerWidth;
-      // Adjust position based on the actual width of the modal and viewport
       if (position.x + modalRect.width > viewportWidth) {
-        setAdjustedPosition({ ...position, x: viewportWidth - modalRect.width - 20 }); // 20px buffer from the edge
+        setAdjustedPosition({
+          ...position,
+          x: viewportWidth - modalRect.width - 20,
+        });
       }
     }
   }, [isOpen, position]);
@@ -48,54 +50,73 @@ const InfoModal = ({
   if (!isOpen) return null;
 
   return (
-    <div
-   ref={modalRef}
-      style={{
-        position: 'absolute',
-        left: `${position.x + 430}px`,
-        top: `${position.y + 50}px`,
-        backgroundColor: "white",
-        padding: "20px",
-        zIndex: 1000,
-      }}
+    <Modal
+      show={isOpen}
+      onHide={onClose}
+      size="lg"
+      aria-labelledby="contained-modal-title-vcenter"
+      centered
     >
-      <div>
-        <label>Name:</label>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-      </div>
-      <div>
-        <label>Description:</label>
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
-      </div>
-      {properties.map((property, index) => (
-        <div key={index}>
-          <input
-            type="text"
-            placeholder="Key"
-            value={property.key}
-            onChange={(e) => handlePropertyChange(index, "key", e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="Value"
-            value={property.value}
-            onChange={(e) =>
-              handlePropertyChange(index, "value", e.target.value)
-            }
-          />
-        </div>
-      ))}
-      <button onClick={addProperty}>Add Property</button>
-      <button onClick={handleSubmit}>Submit</button>
-      <button onClick={onClose}>Close</button>
-    </div>
+      <Modal.Header closeButton>
+        <Modal.Title id="contained-modal-title-vcenter">
+          Edit Information
+        </Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Form>
+          <Form.Group className="mb-3" controlId="formName">
+            <Form.Label>Name:</Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Enter name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </Form.Group>
+          <Form.Group className="mb-3" controlId="formDescription">
+            <Form.Label>Description:</Form.Label>
+            <Form.Control
+              as="textarea"
+              rows={3}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </Form.Group>
+          {properties.map((property, index) => (
+            <div key={index} className="mb-3">
+              <Form.Control
+                className="mb-2"
+                type="text"
+                placeholder="Key"
+                value={property.key}
+                onChange={(e) =>
+                  handlePropertyChange(index, "key", e.target.value)
+                }
+              />
+              <Form.Control
+                type="text"
+                placeholder="Value"
+                value={property.value}
+                onChange={(e) =>
+                  handlePropertyChange(index, "value", e.target.value)
+                }
+              />
+            </div>
+          ))}
+          <Button variant="secondary" onClick={addProperty} className="me-2">
+            Add Property
+          </Button>
+          <Button variant="primary" onClick={handleSubmit}>
+            Submit
+          </Button>
+        </Form>
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="danger" onClick={onClose}>
+          Close
+        </Button>
+      </Modal.Footer>
+    </Modal>
   );
 };
 

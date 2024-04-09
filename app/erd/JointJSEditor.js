@@ -18,7 +18,12 @@ export const exportGraph = (graph) => {
   downloadAnchorNode.remove();
 };
 
-const JointJSEditor = (container, openModalCallback, onElementClick, onElementRightClick) => {
+const JointJSEditor = (
+  container,
+  openModalCallback,
+  onElementClick,
+  onElementRightClick
+) => {
   var graph = new joint.dia.Graph({}, { cellNamespace: joint.shapes });
   var paper = new joint.dia.Paper({
     el: container,
@@ -34,17 +39,15 @@ const JointJSEditor = (container, openModalCallback, onElementClick, onElementRi
 
   paper.on("element:pointerdblclick", openModalCallback);
 
-  paper.on('element:contextmenu', function(elementView, evt) {
-    evt.preventDefault(); // Prevent the default context menu from appearing
-    if (typeof onElementRightClick === 'function') {
-      // Extract the click position and element ID
+  paper.on("element:contextmenu", function (elementView, evt) {
+    evt.preventDefault(); 
+    if (typeof onElementRightClick === "function") {
       const { x, y } = { x: evt.clientX, y: evt.clientY };
       const modelId = elementView.model.id;
-      // Invoke the callback with the element ID and click position
       onElementRightClick(modelId, x, y);
     }
   });
-  
+
   paper.on("element:pointerclick", function (elementView) {
     if (typeof onElementClick === "function") {
       const model = elementView.model;
@@ -75,13 +78,12 @@ const JointJSEditor = (container, openModalCallback, onElementClick, onElementRi
         const compareProps = compareElement.prop("customProperties") || [];
         const comparePropValues = compareProps.map((prop) => prop.value);
 
-        // Accumulate shared properties
+        
         const sharedProperties = elementProps.filter((prop) =>
           comparePropValues.includes(prop.value)
         );
 
         if (sharedProperties.length) {
-          // Check if a link for these elements already exists in linksToCreate
           const existingLinkIndex = linksToCreate.findIndex(
             (link) =>
               (link.source === element.id &&
@@ -90,13 +92,11 @@ const JointJSEditor = (container, openModalCallback, onElementClick, onElementRi
           );
 
           if (existingLinkIndex > -1) {
-            // If a link exists, append new shared properties to it
             linksToCreate[existingLinkIndex].properties = [
               ...linksToCreate[existingLinkIndex].properties,
               ...sharedProperties,
             ];
           } else {
-            // If no link exists, create a new one
             linksToCreate.push({
               source: element.id,
               target: compareElement.id,

@@ -4,7 +4,7 @@ import JointJSEditor from "./JointJSEditor";
 import { exportGraph } from "./JointJSEditor";
 import OntologyModal from "./OntologyModal";
 import InfoModal from "./InfoModal";
-import ContextMenu from './ContextMenu';
+import ContextMenu from "./ContextMenu";
 
 import {
   Container,
@@ -43,8 +43,6 @@ const ErdEditor = () => {
     position: { x: 0, y: 0 },
     targetElementId: null,
   });
-  const [contextMenuVisible, setContextMenuVisible] = useState(false);
-  const [contextMenuPosition, setContextMenuPosition] = useState({x: 0, y: 0});
   const editorRefs = useRef({});
 
   useEffect(() => {
@@ -58,7 +56,7 @@ const ErdEditor = () => {
           editorRefs.current[firstEditorId].current,
           handleElementDoubleClick,
           handleElementClick,
-          handleElementRightClick 
+          handleElementRightClick
         );
         console.log("First editor initialized:", newEditor);
         setEditors([{ id: "editor-0", instance: newEditor, elements: [] }]);
@@ -133,17 +131,15 @@ const ErdEditor = () => {
     setContextMenuVisible(true);
   };
 
-
   const hideContextMenu = () => {
     setContextMenuVisible(false);
   };
 
   const handleSelectAction = (action) => {
     console.log(action);
-    hideContextMenu(); 
+    hideContextMenu();
   };
 
-  
   const updateElementsList = (editorInstance, tabId) => {
     console.log(`Updating elements list for: ${tabId}`);
     if (!editorInstance) return;
@@ -157,23 +153,26 @@ const ErdEditor = () => {
 
   const handleElementDoubleClick = (cellView) => {
     console.log("Element double-clicked:", cellView.model.id);
-  
+
     const element = cellView.model;
     if (!element) {
       console.log("Double-clicked element not found.");
       return;
     }
-  
+
     const bbox = cellView.getBBox();
-    const modalPosition = { x: bbox.x + bbox.width / 2, y: bbox.y + bbox.height / 2 };
-  
+    const modalPosition = {
+      x: bbox.x + bbox.width / 2,
+      y: bbox.y + bbox.height / 2,
+    };
+
     setCurrentElementId(element.id);
     setCustomProperties(element.prop("customProperties") || []);
     setElementName(element.attr("text/text") || "");
     setElementDescription(element.prop("description") || "");
 
-    setModalPosition(modalPosition); 
-  
+    setModalPosition(modalPosition);
+
     setIsModalOpen(true);
   };
 
@@ -204,7 +203,6 @@ const ErdEditor = () => {
       targetElementId: modelId,
     });
   };
-  
 
   const handleCreateLinks = () => {
     const activeEditor = editors.find(
@@ -331,6 +329,13 @@ const ErdEditor = () => {
     );
   };
 
+  const handleHide = () => {
+    setContextMenuState((prevState) => ({
+      ...prevState,
+      visible: false,
+    }));
+  };
+
   return (
     <div className="container-fluid h-100">
       <div className="row">
@@ -384,21 +389,23 @@ const ErdEditor = () => {
       </div>
 
       <div className="row h-100">
-
-      <ContextMenu
-      visible={contextMenuState.visible}
-      position={contextMenuState.position}
-      onSelect={(action) => {
-        if (action === 'delete') {
-          const activeEditor = editors.find(editor => editor.id === activeTab)?.instance;
-          if (activeEditor && contextMenuState.targetElementId) {
-            activeEditor.removeElement(contextMenuState.targetElementId);
-            setContextMenuState({ ...contextMenuState, visible: false });
-          }
-        }
-        // Handle other actions (copy, changeType) similarly
-      }}
-    />
+        <ContextMenu
+          visible={contextMenuState.visible}
+          position={contextMenuState.position}
+          onHide={handleHide}
+          onSelect={(action) => {
+            if (action === "delete") {
+              const activeEditor = editors.find(
+                (editor) => editor.id === activeTab
+              )?.instance;
+              if (activeEditor && contextMenuState.targetElementId) {
+                activeEditor.removeElement(contextMenuState.targetElementId);
+                setContextMenuState({ ...contextMenuState, visible: false });
+              }
+            }
+            // Handle other actions (copy, changeType) similarly
+          }}
+        />
         <div
           className="col-md-2 p-2"
           style={{ overflowY: "auto", background: "#eaeaea" }}
@@ -424,17 +431,17 @@ const ErdEditor = () => {
         >
           {renderSelectedElementDetails()}
         </div>
-     {isModalOpen && (
-  <InfoModal
-    isOpen={isModalOpen}
-    onClose={() => setIsModalOpen(false)}
-    onSubmit={handleModalSubmit}
-    initialName={elementName}
-    initialDescription={elementDescription}
-    initialProperties={customProperties}
-    position={modalPosition} 
-  />
-)}
+        {isModalOpen && (
+          <InfoModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onSubmit={handleModalSubmit}
+            initialName={elementName}
+            initialDescription={elementDescription}
+            initialProperties={customProperties}
+            position={modalPosition}
+          />
+        )}
 
         {showOntologyModal && (
           <OntologyModal
