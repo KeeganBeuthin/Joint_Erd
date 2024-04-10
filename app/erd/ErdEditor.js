@@ -19,6 +19,7 @@ import {
 import "bootstrap/dist/css/bootstrap.min.css";
 import TreeView from "./TreeView";
 import ElementDetails from "./ElementDetails";
+import CanvasContextMenu from "./CanvasContextMenu";
 
 const ErdEditor = () => {
   const workspaceRef = useRef(null);
@@ -39,7 +40,12 @@ const ErdEditor = () => {
   const [elementName, setElementName] = useState("default");
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
   const [elementDescription, setElementDescription] = useState("default");
-  const [contextMenuState, setContextMenuState] = useState({
+  const [canvasMenuState, setCanvasMenuState] = useState({
+    visible: false,
+    position: { x: 0, y: 0 }
+  });
+  
+  const [contextMenuState, setContextMenuState] = useState({ 
     visible: false,
     position: { x: 0, y: 0 },
     targetElementId: null,
@@ -57,7 +63,8 @@ const ErdEditor = () => {
           editorRefs.current[firstEditorId].current,
           handleElementDoubleClick,
           handleElementClick,
-          handleElementRightClick
+          handleElementRightClick,
+          handleCanvasRightClick
         );
         console.log("First editor initialized:", newEditor);
         setEditors([{ id: "editor-0", instance: newEditor, elements: [] }]);
@@ -256,6 +263,21 @@ const ErdEditor = () => {
       }
     }
   };
+  
+  const handleCanvasRightClick = (event, x, y) => {
+    setCanvasMenuState({
+      visible: true,
+      position: {x, y}
+    });
+  };
+
+  const handleCanvasMenuSelect = (action) => {
+    if (action === "paste") {
+      // Implement paste logic here
+    }
+    // Handle other actions as needed
+    setCanvasMenuState({ ...canvasMenuState, visible: false }); // Hide menu after action
+  };
 
   const renderSelectedElementDetails = () => {
     const activeEditor = editors.find(
@@ -318,6 +340,7 @@ const ErdEditor = () => {
     switch (action) {
       case "delete":
         activeEditor.removeElement(contextMenuState.targetElementId);
+        updateElementsList(activeEditor, activeTab);
         setContextMenuState({ ...contextMenuState, visible: false });
         break;
       case "copy":
@@ -433,6 +456,12 @@ const ErdEditor = () => {
           onHide={handleHide}
           onSelect={handleSelect}
         />
+        <CanvasContextMenu
+  visible={canvasMenuState.visible}
+  position={canvasMenuState.position}
+  onSelect={handleCanvasMenuSelect}
+  onHide={() => setCanvasMenuState({ ...canvasMenuState, visible: false })}
+/>
         <div
           className="col-md-2 p-2"
           style={{ overflowY: "auto", background: "#eaeaea" }}
