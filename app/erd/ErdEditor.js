@@ -5,7 +5,7 @@ import { exportGraph } from "./JointJSEditor";
 import OntologyModal from "./OntologyModal";
 import InfoModal from "./InfoModal";
 import ContextMenu from "./ContextMenu";
-
+import * as joint from "jointjs";
 import {
   Container,
   Row,
@@ -30,6 +30,7 @@ const ErdEditor = () => {
   const [selectedElementId, setSelectedElementId] = useState("");
   const [customProperties, setCustomProperties] = useState([]);
   const [selectedElement, setSelectedElement] = useState(null);
+  const [copiedElement, setCopiedElement] = useState(null);
   const [editors, setEditors] = useState([
     { id: "editor-0", instance: null, elements: [] },
   ]);
@@ -310,6 +311,43 @@ const ErdEditor = () => {
     }
   };
 
+  const handleSelect = (action) => {
+    const activeEditor = editors.find((editor) => editor.id === activeTab)?.instance;
+    if (!activeEditor || !contextMenuState.targetElementId) return;
+  
+    switch (action) {
+      case "delete":
+        activeEditor.removeElement(contextMenuState.targetElementId);
+        setContextMenuState({ ...contextMenuState, visible: false });
+        break;
+      case "copy":
+        const elementToCopy = activeEditor.graph.getCell(contextMenuState.targetElementId);
+        if (elementToCopy) {
+          // Assuming elementToCopy.toJSON is a method to serialize the element for copying
+          setCopiedElement(elementToCopy.toJSON()); // or another suitable method to extract the data you need
+        }
+        setContextMenuState({ ...contextMenuState, visible: false });
+        break;
+
+        case 'paste': 
+        
+        if (!copiedElement) return; 
+
+        const activeEditor = editors.find((editor) => editor.id === activeTab)?.instance;
+        if (!activeEditor) return;
+      
+        const newElement = {
+          ...copiedElement,
+          id: generateUniqueId(), 
+        };
+      
+        activeEditor.addElement(newElement);
+        break;
+      
+    }
+  };
+  
+
   const renderTabs = () => {
     return (
       <Tabs activeKey={activeTab} onSelect={setActiveTab} className="mb-3">
@@ -393,18 +431,7 @@ const ErdEditor = () => {
           visible={contextMenuState.visible}
           position={contextMenuState.position}
           onHide={handleHide}
-          onSelect={(action) => {
-            if (action === "delete") {
-              const activeEditor = editors.find(
-                (editor) => editor.id === activeTab
-              )?.instance;
-              if (activeEditor && contextMenuState.targetElementId) {
-                activeEditor.removeElement(contextMenuState.targetElementId);
-                setContextMenuState({ ...contextMenuState, visible: false });
-              }
-            }
-            // Handle other actions (copy, changeType) similarly
-          }}
+          onSelect={handleSelect}
         />
         <div
           className="col-md-2 p-2"
