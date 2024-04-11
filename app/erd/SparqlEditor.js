@@ -9,6 +9,7 @@ const SparqlEditor = () => {
   const [activeTab, setActiveTab] = useState("editor");
   const [timeout, setTimeout] = useState(30000);
   const [originalData, setOriginalData] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null);
   const [options, setOptions] = useState({
     strictChecking: true,
     suppressErrors: false,
@@ -116,7 +117,6 @@ const SparqlEditor = () => {
   const convertJsonToCsv = (json) => {
     let data;
 
-    // Check if json is a string and needs parsing
     if (typeof json === "string") {
       try {
         data = JSON.parse(json);
@@ -187,6 +187,32 @@ const SparqlEditor = () => {
     });
   };
 
+  const renderClickableItems = () => {
+    if (!originalData || !originalData.results || !originalData.results.bindings) {
+      return <div>No data available.</div>;
+    }
+  
+    return originalData.results.bindings.map((item, index) => (
+      <div key={index} className="clickable-item" onClick={() => setSelectedItem(item)} style={{ cursor: 'pointer', padding: '10px', borderBottom: '1px solid #ccc' }}>
+        {item.label ? item.label.value : `Item ${index + 1}`}
+      </div>
+    ));
+  };
+
+  const renderSelectedItemDetails = () => {
+    if (!selectedItem) return <div>Select an item to view details.</div>;
+  
+    return (
+      <div>
+        {Object.keys(selectedItem).map((key, index) => (
+          <div key={index}>
+            <strong>{key}:</strong> {selectedItem[key].value || selectedItem[key]}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="container my-5">
       <Tabs
@@ -207,24 +233,6 @@ const SparqlEditor = () => {
               onChange={(e) => setQuery(e.target.value)}
             ></textarea>
           </div>
-
-          <div className="mb-3">
-            <label htmlFor="results-format" className="form-label">
-              Results Format
-            </label>
-            <select
-              className="form-select"
-              id="results-format"
-              value={resultsFormat}
-              onChange={(e) => setResultsFormat(e.target.value)}
-            >
-              <option>HTML</option>
-              <option>XML</option>
-              <option>JSON</option>
-              <option>CSV</option>
-            </select>
-          </div>
-
           <div className="mb-3">
             <label htmlFor="timeout" className="form-label">
               Execution timeout (milliseconds)
@@ -336,6 +344,12 @@ const SparqlEditor = () => {
             )}
           </div>
         </Tab>
+        <Tab eventKey="SelectItems" title="Select">
+    {renderClickableItems()}
+  </Tab>
+    <Tab eventKey="details" title="Details">
+    {renderSelectedItemDetails()}
+  </Tab>
       </Tabs>
     </div>
   );
