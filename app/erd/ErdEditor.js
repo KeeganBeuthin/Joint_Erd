@@ -64,7 +64,8 @@ const ErdEditor = () => {
           handleElementDoubleClick,
           handleElementClick,
           handleElementRightClick,
-          handleCanvasRightClick
+          handleCanvasRightClick,
+          handleCanvasDoubleClick
         );
         console.log("First editor initialized:", newEditor);
         setEditors([{ id: "editor-0", instance: newEditor, elements: [] }]);
@@ -96,7 +97,8 @@ const ErdEditor = () => {
       const editorInstance = JointJSEditor(
         container,
         handleElementDoubleClick,
-        handleElementClick
+        handleElementClick,
+        handleElementRightClick
       );
       setEditors((prevEditors) =>
         prevEditors.map((editor) =>
@@ -205,6 +207,7 @@ const ErdEditor = () => {
   };
 
   const handleElementRightClick = (modelId, x, y) => {
+    console.log('click')
     setContextMenuState({
       visible: true,
       position: { x, y },
@@ -271,12 +274,27 @@ const ErdEditor = () => {
     });
   };
 
+  const handleCanvasDoubleClick = (x, y) => {
+    if (!workspaceRef.current) return;
+
+    const rect = workspaceRef.current.getBoundingClientRect();
+  
+
+    const adjustedX = x + rect.left + window.scrollX;  
+    const adjustedY = y + rect.top + window.scrollY;   
+  
+
+    setCanvasMenuState({
+      visible: true,
+      position: { x: adjustedX, y: adjustedY }
+    });
+  };
+  
+
   const handleCanvasMenuSelect = (action) => {
     if (action === "paste") {
-      // Implement paste logic here
     }
-    // Handle other actions as needed
-    setCanvasMenuState({ ...canvasMenuState, visible: false }); // Hide menu after action
+    setCanvasMenuState({ ...canvasMenuState, visible: false }); 
   };
 
   const renderSelectedElementDetails = () => {
@@ -346,8 +364,7 @@ const ErdEditor = () => {
       case "copy":
         const elementToCopy = activeEditor.graph.getCell(contextMenuState.targetElementId);
         if (elementToCopy) {
-          // Assuming elementToCopy.toJSON is a method to serialize the element for copying
-          setCopiedElement(elementToCopy.toJSON()); // or another suitable method to extract the data you need
+          setCopiedElement(elementToCopy.toJSON()); 
         }
         setContextMenuState({ ...contextMenuState, visible: false });
         break;

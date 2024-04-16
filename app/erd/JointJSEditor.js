@@ -22,7 +22,8 @@ const JointJSEditor = (
   container,
   openModalCallback,
   onElementClick,
-  onElementRightClick
+  onElementRightClick,
+  onCanvasDoubleClick 
 ) => {
   var graph = new joint.dia.Graph({}, { cellNamespace: joint.shapes });
   var paper = new joint.dia.Paper({
@@ -47,6 +48,15 @@ const JointJSEditor = (
       onElementRightClick(modelId, x, y);
     }
   });
+
+  paper.on("blank:pointerdblclick", function(evt, x, y) {
+    evt.preventDefault();  
+    if (typeof onCanvasDoubleClick === "function") {
+      onCanvasDoubleClick(x, y); 
+    }
+  });
+
+
 
   paper.on("element:pointerclick", function (elementView) {
     if (typeof onElementClick === "function") {
