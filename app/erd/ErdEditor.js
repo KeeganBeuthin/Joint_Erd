@@ -98,7 +98,8 @@ const ErdEditor = () => {
         container,
         handleElementDoubleClick,
         handleElementClick,
-        handleElementRightClick
+        handleElementRightClick,
+        handleCanvasRightClick
       );
       setEditors((prevEditors) =>
         prevEditors.map((editor) =>
@@ -108,27 +109,6 @@ const ErdEditor = () => {
       updateElementsList(editorInstance, tabId);
     }
   }, [activeTab, editors]);
-
-  const initializeEditorForTab = (tabId) => {
-    if (!editorRefs.current[tabId]) {
-      editorRefs.current[tabId] = React.createRef();
-    }
-    const container = editorRefs.current[tabId].current;
-    const editorForTab = editors.find((editor) => editor.id === tabId);
-    if (container && (!editorForTab || !editorForTab.instance)) {
-      const editorInstance = JointJSEditor(
-        container,
-        handleElementDoubleClick,
-        handleElementClick
-      );
-      setEditors((prevEditors) =>
-        prevEditors.map((editor) =>
-          editor.id === tabId ? { ...editor, instance: editorInstance } : editor
-        )
-      );
-      updateElementsList(editorInstance, tabId);
-    }
-  };
 
   const addTab = () => {
     const newTabId = `editor-${editors.length}`;
@@ -267,34 +247,51 @@ const ErdEditor = () => {
     }
   };
   
-  const handleCanvasRightClick = (event, x, y) => {
+  const handleCanvasRightClick = (x, y) => {
     setCanvasMenuState({
       visible: true,
-      position: {x, y}
+      position: { x, y }
     });
   };
 
   const handleCanvasDoubleClick = (x, y) => {
     if (!workspaceRef.current) return;
 
-    const rect = workspaceRef.current.getBoundingClientRect();
-  
-
-    const adjustedX = x + rect.left + window.scrollX;  
-    const adjustedY = y + rect.top + window.scrollY;   
+    const rect = workspaceRef.current.getBoundingClientRect(); 
   
 
     setCanvasMenuState({
       visible: true,
-      position: { x: adjustedX, y: adjustedY }
+      position: { x, y}
     });
   };
   
 
   const handleCanvasMenuSelect = (action) => {
-    if (action === "paste") {
+    if (action === "paste" && copiedElement) {
+      // Get a reference to the active editor's graph
+      const activeEditorGraph = editors.find(editor => editor.id === activeTab)?.instance.graph;
+  
+      if (activeEditorGraph) {
+        const pastedElementData = JSON.parse(JSON.stringify(copiedElement)); // Deep copy to ensure no references are kept
+        pastedElementData.id = joint.util.uuid(); // Assign a new ID to avoid conflicts
+  
+        // Optionally modify position or other attributes as necessary
+        pastedElementData.position.x += 10; // Offset new element slightly for visibility
+        pastedElementData.position.y += 10;
+  
+        const element = joint.dia.Element.define(pastedElementData.type, pastedElementData.attrs, {
+          markup: pastedElementData.markup
+        });
+        
+        const newElement = new element(pastedElementData);
+  
+        activeEditorGraph.addCell(newElement);
+        updateElementsList(activeEditorGraph, activeTab); // Optionally update UI lists or other views
+      }
     }
-    setCanvasMenuState({ ...canvasMenuState, visible: false }); 
+  
+    setCanvasMenuState({ ...canvasMenuState, visible: false }); // Hide menu after action
   };
 
   const renderSelectedElementDetails = () => {

@@ -49,13 +49,13 @@ const JointJSEditor = (
     }
   });
 
-  paper.on("blank:pointerdblclick", function(evt, x, y) {
-    evt.preventDefault();  
+  paper.on("blank:pointerdblclick", function (evt) {
+    evt.preventDefault();
     if (typeof onCanvasDoubleClick === "function") {
-      onCanvasDoubleClick(x, y); 
+      const { x, y } = { x: evt.clientX, y: evt.clientY };
+      onCanvasDoubleClick(x,y);
     }
   });
-
 
 
   paper.on("element:pointerclick", function (elementView) {
