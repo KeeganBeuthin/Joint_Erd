@@ -116,6 +116,41 @@ const ErdEditor = () => {
     setActiveTab(newTabId);
   };
 
+  const pasteElementToActiveGraph = () => {
+    const activeEditor = editors.find(editor => editor.id === activeTab)?.instance;
+    if (!activeEditor || !activeEditor.graph) {
+        console.error("Active editor or graph is not defined.");
+        return; 
+    }
+
+    if (!copiedElement) {
+        console.error("No element has been copied to paste.");
+        return; 
+    }
+    const elementData = JSON.parse(JSON.stringify(copiedElement));
+    elementData.id = joint.util.uuid(); 
+    
+    elementData.position = { ...canvasMenuState.position };
+
+    const typeParts = elementData.type.split('.');
+    if (typeParts.length === 2 && joint.shapes[typeParts[0]] && joint.shapes[typeParts[0]][typeParts[1]]) {
+        const ElementConstructor = joint.shapes[typeParts[0]][typeParts[1]];
+        const newElement = new ElementConstructor(elementData);
+
+
+        activeEditor.graph.addCell(newElement);
+        updateElementsList(activeEditor.graph, activeTab); 
+
+        // Optionally, clear the copied element or keep it for further pasting
+        // setCopiedElement(null);
+
+        setCanvasMenuState({ visible: false, position: { x: 0, y: 0 } });
+    } else {
+        console.error("Invalid element type specified for pasting:", elementData.type);
+    }
+};
+  
+
   const showContextMenu = (position) => {
     setContextMenuPosition(position);
     setContextMenuVisible(true);
@@ -266,33 +301,16 @@ const ErdEditor = () => {
     });
   };
   
-
   const handleCanvasMenuSelect = (action) => {
-    if (action === "paste" && copiedElement) {
-      // Get a reference to the active editor's graph
-      const activeEditorGraph = editors.find(editor => editor.id === activeTab)?.instance.graph;
-  
-      if (activeEditorGraph) {
-        const pastedElementData = JSON.parse(JSON.stringify(copiedElement)); // Deep copy to ensure no references are kept
-        pastedElementData.id = joint.util.uuid(); // Assign a new ID to avoid conflicts
-  
-        // Optionally modify position or other attributes as necessary
-        pastedElementData.position.x += 10; // Offset new element slightly for visibility
-        pastedElementData.position.y += 10;
-  
-        const element = joint.dia.Element.define(pastedElementData.type, pastedElementData.attrs, {
-          markup: pastedElementData.markup
-        });
-        
-        const newElement = new element(pastedElementData);
-  
-        activeEditorGraph.addCell(newElement);
-        updateElementsList(activeEditorGraph, activeTab); // Optionally update UI lists or other views
-      }
+    switch (action) {
+        case "paste":
+            pasteElementToActiveGraph();
+            break;
+        default:
+            setCanvasMenuState({ visible: false, position: { x: 0, y: 0 } });
+            break;
     }
-  
-    setCanvasMenuState({ ...canvasMenuState, visible: false }); // Hide menu after action
-  };
+};
 
   const renderSelectedElementDetails = () => {
     const activeEditor = editors.find(
@@ -362,6 +380,7 @@ const ErdEditor = () => {
         const elementToCopy = activeEditor.graph.getCell(contextMenuState.targetElementId);
         if (elementToCopy) {
           setCopiedElement(elementToCopy.toJSON()); 
+          console.log(copiedElement)
         }
         setContextMenuState({ ...contextMenuState, visible: false });
         break;
