@@ -167,14 +167,22 @@ const ErdEditor = () => {
 
   const updateElementsList = (editorInstance, tabId) => {
     console.log(`Updating elements list for: ${tabId}`);
-    if (!editorInstance) return;
+
+    // Check if editorInstance or its graph is undefined before accessing it
+    if (!editorInstance || !editorInstance.graph) {
+        console.error("Editor instance or graph is undefined:", tabId);
+        return;
+    }
+
     const updatedElements = editorInstance.graph.getElements().map((el) => ({
-      id: el.id,
-      name: el.attr("text/text") || `Unnamed ${el.get("type")}`,
+        id: el.id,
+        name: el.attr("text/text") || `Unnamed ${el.get("type")}`,
     }));
-    setElementsByTab((prev) => ({ ...prev, [tabId]: updatedElements }));
+
+    setElementsByTab(prev => ({ ...prev, [tabId]: updatedElements }));
     console.log(`Elements updated for: ${tabId}`, updatedElements);
-  };
+};
+
 
   const handleElementDoubleClick = (cellView) => {
     console.log("Element double-clicked:", cellView.model.id);
