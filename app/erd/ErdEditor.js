@@ -309,16 +309,23 @@ const ErdEditor = () => {
     });
   };
   
-  const handleCanvasMenuSelect = (action) => {
+  const handleCanvasMenuSelect = (action, type) => {
     switch (action) {
-        case "paste":
-            pasteElementToActiveGraph();
-            break;
-        default:
-            setCanvasMenuState({ visible: false, position: { x: 0, y: 0 } });
-            break;
+      case "addElement":
+        addElementToActiveGraph(type);
+        break;
+      case "createLinks":
+        handleCreateLinks();
+        break;
+      case "paste":
+        pasteElementToActiveGraph();
+        break;
+      default:
+        console.error("Unknown action:", action);
+        break;
     }
-};
+    setCanvasMenuState({ visible: false, position: { x: 0, y: 0 } });
+  };
 
   const renderSelectedElementDetails = () => {
     const activeEditor = editors.find(

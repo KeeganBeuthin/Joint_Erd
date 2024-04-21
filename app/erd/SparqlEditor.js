@@ -9,8 +9,8 @@ const SparqlEditor = () => {
         if (yasguiRef.current) {
             const yasgui = new Yasgui(yasguiRef.current, {
                 requestConfig: {
-                    endpoint: "https://dbpedia.org/sparql",
-                    method: "GET", 
+                    endpoint: "http://localhost:9000/sparql",
+                    method: "Post", 
                 },
                 copyEndpointOnNewTab: false
             });

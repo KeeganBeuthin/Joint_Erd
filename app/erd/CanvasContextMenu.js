@@ -27,10 +27,10 @@ const CanvasContextMenu = ({ visible, position, onSelect, onHide }) => {
     <div ref={menuRef} style={{ position: 'fixed', top: position.y, left: position.x, zIndex: 1000 }}>
       <Dropdown.Menu show={true}>
         <Dropdown.Item onClick={() => onSelect('paste')}>Paste</Dropdown.Item>
-        <Dropdown.Item onClick={() => onSelect('relationship')}>Add Relationship</Dropdown.Item>
-        <Dropdown.Item onClick={() => onSelect('customshape')}>Add Custom Shape</Dropdown.Item>
-        <Dropdown.Item onClick={() => onSelect('entity')}>Add Entity</Dropdown.Item>
-        <Dropdown.Item onClick={() => onSelect('link')}>Create Links</Dropdown.Item>
+        <Dropdown.Item onClick={() => onSelect('addElement', 'Relationship')}>Add Relationship</Dropdown.Item>
+        <Dropdown.Item onClick={() => onSelect('addElement', 'CustomShape')}>Add Custom Shape</Dropdown.Item>
+        <Dropdown.Item onClick={() => onSelect('addElement', 'Entity')}>Add Entity</Dropdown.Item>
+        <Dropdown.Item onClick={() => onSelect('createLinks')}>Create Links</Dropdown.Item>
         {/* Add other canvas-specific options here */}
       </Dropdown.Menu>
     </div>

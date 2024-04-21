@@ -30,7 +30,6 @@ const ContextMenu = ({ visible, position, onSelect, onHide }) => {
       <Dropdown.Menu show={true}>
         <Dropdown.Item onClick={() => onSelect('delete')}>Delete</Dropdown.Item>
         <Dropdown.Item onClick={() => onSelect('copy')}>Copy</Dropdown.Item>
-        <Dropdown.Item onClick={() => onSelect('paste')}>Paste</Dropdown.Item>
         {/* Add more Dropdown.Items as needed */}
       </Dropdown.Menu>
     </div>
