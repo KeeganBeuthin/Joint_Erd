@@ -1,14 +1,29 @@
 'use client'
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { Tab, Nav, Dropdown, ButtonGroup } from 'react-bootstrap';
 import ErdEditor from './ErdEditor';
 import SparqlEditor from './SparqlEditor';
+import { useRouter } from 'next/navigation';
 // Import or define other components like SparqlQuery and OtherComponent
 
 export default function Home() {
+  const router = useRouter();
   const [tabs, setTabs] = useState([]);
   const [activeKey, setActiveKey] = useState(null);
   const [tabCounter, setTabCounter] = useState(0);
+  const [routerReady, setRouterReady] = useState(false);
+
+  useEffect(() => {
+    const initiateLogin = async () => {
+      const res = await fetch('/api/auth/session'); // Check if the user is already logged in
+      const { isLoggedIn } = await res.json();
+      if (!isLoggedIn) {
+        router.push('/api/auth/login');
+      }
+    };
+
+    initiateLogin();
+  }, [router]);
 
   // Function to generate a unique key for each new tab
   const generateUniqueKey = (prefix) => `${prefix}-${tabCounter}`;
