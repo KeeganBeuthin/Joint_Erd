@@ -5,6 +5,8 @@ import { Tab, Nav, Dropdown, ButtonGroup } from "react-bootstrap";
 import ErdEditor from "./ErdEditor";
 import SparqlEditor from "./SparqlEditor";
 import userManager from "@/utils/oidc";
+import BlockchainExplorer from "./BlockChain";
+
 
 export default function Home() {
   const [tabs, setTabs] = useState([]);
@@ -95,6 +97,9 @@ export default function Home() {
             <Dropdown.Item onClick={() => addTab("sparqlQuery")}>
               SPARQL Query
             </Dropdown.Item>
+            <Dropdown.Item onClick={() => addTab("blockchain")}>
+              BlockChain Explorer
+            </Dropdown.Item>
             <Dropdown.Item onClick={() => addTab("other")}>Other</Dropdown.Item>
           </Dropdown.Menu>
         </Dropdown>
@@ -106,8 +111,10 @@ export default function Home() {
               (user ? <ErdEditor /> : <div>Login Required</div>)}
             {tab.eventKey.includes("sparqlQuery") &&
               (user ? <SparqlEditor /> : <div>Login Required</div>)}
-            {tab.eventKey.includes("other") &&
+                  {tab.eventKey.includes("other") &&
               (user ? <div>Other Component</div> : <div>Login Required</div>)}
+            {tab.eventKey.includes("blockchain") &&
+              (user ? <BlockchainExplorer/> : <div>Login Required</div>)}
           </Tab.Pane>
         ))}
       </Tab.Content>
