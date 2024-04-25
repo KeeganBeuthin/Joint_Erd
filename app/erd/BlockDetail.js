@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Table } from 'react-bootstrap';
+import { useRouter } from 'next/navigation';
 
 const BlockDetail = ({ blockHash }) => {
+    const router = useRouter()
   const [blockDetails, setBlockDetails] = useState(null);
 
 
@@ -75,15 +77,22 @@ const BlockDetail = ({ blockHash }) => {
               </tr>
             </thead>
             <tbody>
-              {blockDetails.transactions.map((tx, index) => (
-                <tr key={index}>
-                  <td>{tx.hash}</td>
-                  <td>{tx.amount} BTC</td>
-                  <td>{new Date(tx.date).toLocaleString()}</td>
-                  <td>{tx.fee} BTC</td>
-                </tr>
-              ))}
-            </tbody>
+  {blockDetails.transactions.map((tx, index) => (
+    <tr key={index}>
+      <td>
+        <a href={`/erd/transaction/${tx.hash}`} onClick={(e) => {
+          e.preventDefault();
+          router.push(`/erd/transaction/${tx.hash}`);
+        }}>
+          {tx.hash}
+        </a>
+      </td>
+      <td>{tx.amount} BTC</td>
+      <td>{new Date(tx.date).toLocaleString()}</td>
+      <td>{tx.fee} BTC</td>
+    </tr>
+  ))}
+</tbody>
           </Table>
         </Col>
       </Row>

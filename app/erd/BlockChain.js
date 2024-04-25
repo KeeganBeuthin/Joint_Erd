@@ -85,7 +85,7 @@ const BlockchainExplorer = () => {
   const [selectedBlockHash, setSelectedBlockHash] = useState(null);
 
   const handleBlockClick = (hash) => {
-    router.push(`/${hash}`);
+    router.push(`/erd/${hash}`);
   };
 
   return (

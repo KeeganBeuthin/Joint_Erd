@@ -1,6 +1,6 @@
 // pages/block/[blockHash].js
 'use client'
-import BlockDetail from "../erd/BlockDetail";
+import BlockDetail from "../BlockDetail";
 
 export default function BlockPage({ params }) {
   const blockHash = params.blockHash;
