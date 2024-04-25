@@ -40,6 +40,7 @@ const BlockchainHeader = ({ blockHeight, supply, marketCap, changeRates }) => {
 
 const BlockchainExplorer = () => {
     const [headerData, setHeaderData] = useState([])
+    const router = useRouter();
     const [blocks, setBlocks] = useState([
 
       // Mock block data
@@ -79,12 +80,12 @@ const BlockchainExplorer = () => {
   }, []);
 
 
+  
+
   const [selectedBlockHash, setSelectedBlockHash] = useState(null);
 
   const handleBlockClick = (hash) => {
-    setSelectedBlockHash(hash);
-    // In a real application, you might navigate to a new route
-    // router.push(`/block/${hash}`);
+    router.push(`/${hash}`);
   };
 
   return (
