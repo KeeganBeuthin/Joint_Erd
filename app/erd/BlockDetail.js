@@ -1,29 +1,28 @@
-import { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Table } from 'react-bootstrap';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from "react";
+import { Container, Row, Col, Card, Table } from "react-bootstrap";
+import { useRouter } from "next/navigation";
 
 const BlockDetail = ({ blockHash }) => {
-    const router = useRouter()
+  const router = useRouter();
   const [blockDetails, setBlockDetails] = useState(null);
-
 
   const mockBlockDetails = {
     hash: blockHash,
     height: 840825,
     size: 1378393,
     time: 1618888888,
-    reward: '3.125',
+    reward: "3.125",
     transactions: [
       {
-        hash: '79abf8f0...d8f7d8225',
-        amount: '3.76055037',
+        hash: "79abf8f0...d8f7d8225",
+        amount: "3.76055037",
         date: 1618888888,
-        fee: '0.0005',
+        fee: "0.0005",
       },
       // More mock transactions...
     ],
     confirmations: 100,
-    merkle_root: '89ee4a98bd1bcee5eea...',
+    merkle_root: "89ee4a98bd1bcee5eea...",
   };
 
   useEffect(() => {
@@ -51,7 +50,8 @@ const BlockDetail = ({ blockHash }) => {
                 <br />
                 Block Size: {blockDetails.size} bytes
                 <br />
-                Received Time: {new Date(blockDetails.time * 1000).toLocaleString()}
+                Received Time:{" "}
+                {new Date(blockDetails.time * 1000).toLocaleString()}
                 <br />
                 Rewards: {blockDetails.reward} BTC
                 <br />
@@ -77,22 +77,25 @@ const BlockDetail = ({ blockHash }) => {
               </tr>
             </thead>
             <tbody>
-  {blockDetails.transactions.map((tx, index) => (
-    <tr key={index}>
-      <td>
-        <a href={`/erd/transaction/${tx.hash}`} onClick={(e) => {
-          e.preventDefault();
-          router.push(`/erd/transaction/${tx.hash}`);
-        }}>
-          {tx.hash}
-        </a>
-      </td>
-      <td>{tx.amount} BTC</td>
-      <td>{new Date(tx.date).toLocaleString()}</td>
-      <td>{tx.fee} BTC</td>
-    </tr>
-  ))}
-</tbody>
+              {blockDetails.transactions.map((tx, index) => (
+                <tr key={index}>
+                  <td>
+                    <a
+                      href={`/erd/transaction/${tx.hash}`}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        router.push(`/erd/transaction/${tx.hash}`);
+                      }}
+                    >
+                      {tx.hash}
+                    </a>
+                  </td>
+                  <td>{tx.amount} BTC</td>
+                  <td>{new Date(tx.date).toLocaleString()}</td>
+                  <td>{tx.fee} BTC</td>
+                </tr>
+              ))}
+            </tbody>
           </Table>
         </Col>
       </Row>

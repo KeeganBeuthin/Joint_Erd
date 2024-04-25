@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react';
-import { Table, Container, Row, Col, Card } from 'react-bootstrap';
-import BlockDetail from './BlockDetail';
-import { useRouter } from 'next/navigation';
-
+import { useState, useEffect } from "react";
+import { Table, Container, Row, Col, Card } from "react-bootstrap";
+import BlockDetail from "./BlockDetail";
+import { useRouter } from "next/navigation";
 
 const BlockchainHeader = ({ blockHeight, supply, marketCap, changeRates }) => {
   return (
@@ -39,48 +38,44 @@ const BlockchainHeader = ({ blockHeight, supply, marketCap, changeRates }) => {
 };
 
 const BlockchainExplorer = () => {
-    const [headerData, setHeaderData] = useState([])
-    const router = useRouter();
-    const [blocks, setBlocks] = useState([
-
-      // Mock block data
-      {
-        hash: '000000000000000000076b86795cd772de07d73c40293636cbf3ce69c7c2e2c5',
-        height: 840813,
-        size: 123456,
-        transactions: 2200,
-        reward: '6.25',
-        time: 1618888888,
-      },
-      {
-        hash: '000000000000000000087c86795cd772de07d73c40293636cbf3ce69c7c2e2d6',
-        height: 840814,
-        size: 113456,
-        transactions: 2100,
-        reward: '6.25',
-        time: 1618890000,
-      },
-      // Add more mock blocks as needed
-    ]);
+  const [headerData, setHeaderData] = useState([]);
+  const router = useRouter();
+  const [blocks, setBlocks] = useState([
+    // Mock block data
+    {
+      hash: "000000000000000000076b86795cd772de07d73c40293636cbf3ce69c7c2e2c5",
+      height: 840813,
+      size: 123456,
+      transactions: 2200,
+      reward: "6.25",
+      time: 1618888888,
+    },
+    {
+      hash: "000000000000000000087c86795cd772de07d73c40293636cbf3ce69c7c2e2d6",
+      height: 840814,
+      size: 113456,
+      transactions: 2100,
+      reward: "6.25",
+      time: 1618890000,
+    },
+    // Add more mock blocks as needed
+  ]);
 
   useEffect(() => {
     // You would fetch and set the header data here, as well as the blocks
     // Simulating fetched data with placeholder values
     setHeaderData({
-      blockHeight: '840813',
-      supply: '19,690,000.00',
-      marketCap: '1,250,027,936,475.94 USD',
+      blockHeight: "840813",
+      supply: "19,690,000.00",
+      marketCap: "1,250,027,936,475.94 USD",
       changeRates: {
-        hourly: '-0.69%',
-        daily: '-4.41%',
-        weekly: '2.88%',
+        hourly: "-0.69%",
+        daily: "-4.41%",
+        weekly: "2.88%",
       },
     });
     // Fetch the blocks as before...
   }, []);
-
-
-  
 
   const [selectedBlockHash, setSelectedBlockHash] = useState(null);
 
