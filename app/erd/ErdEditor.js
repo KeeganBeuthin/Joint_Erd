@@ -139,7 +139,7 @@ const ErdEditor = () => {
 
 
         activeEditor.graph.addCell(newElement);
-        updateElementsList(activeEditor.graph, activeTab); 
+        updateElementsList(activeEditor, activeTab);
 
         // Optionally, clear the copied element or keep it for further pasting
         // setCopiedElement(null);
@@ -221,6 +221,7 @@ const ErdEditor = () => {
         element.prop("customProperties", properties);
       }
     }
+    updateElementsList(activeEditor, activeTab);
     setIsModalOpen(false);
   };
 

@@ -1,5 +1,5 @@
 // TransactionDetail.js
-import { Card, Button } from 'react-bootstrap';
+import { Card, Button } from "react-bootstrap";
 
 const TransactionDetail = ({ txHash, closeDetail }) => {
   const transactionDetails = {

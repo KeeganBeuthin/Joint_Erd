@@ -1,6 +1,6 @@
 // BlockDetail.js
-import React from 'react';
-import { Card, Table, Button } from 'react-bootstrap';
+import React from "react";
+import { Card, Table, Button } from "react-bootstrap";
 
 const BlockDetail = ({ blockData, selectTransaction }) => {
   return (
@@ -21,7 +21,10 @@ const BlockDetail = ({ blockData, selectTransaction }) => {
               <tr key={tx.hash}>
                 <td>{tx.hash}</td>
                 <td>
-                  <Button variant="primary" onClick={() => selectTransaction(tx)}>
+                  <Button
+                    variant="primary"
+                    onClick={() => selectTransaction(tx)}
+                  >
                     View Details
                   </Button>
                 </td>
