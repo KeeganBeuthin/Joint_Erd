@@ -1,12 +1,28 @@
-// BlockchainExplorer.js
+// BlockChain.js
 import { useState } from 'react';
-import { Container, ListGroup, ListGroupItem } from 'react-bootstrap';
-import BlockDetail from './BlockDetail'; // Adjust the path as necessary
+import { Breadcrumb, Container, ListGroup, ListGroupItem } from 'react-bootstrap';
+import BlockDetail from './BlockDetail'; 
+import TransactionDetail from './TransactionDetail';
 
 const BlockchainExplorer = () => {
   const [selectedBlock, setSelectedBlock] = useState(null);
+  const [viewState, setViewState] = useState({
+    view: 'blocks', 
+    selectedBlock: null,
+    selectedTransaction: null,
+  });
 
-  // Mock data for the blocks
+  const updateViewState = (view, block = null, transaction = null) => {
+    setViewState({ view, selectedBlock: block, selectedTransaction: transaction });
+  };
+
+
+  const breadcrumbItems = [
+    { label: 'Blocks', onClick: () => updateViewState('blocks'), active: viewState.view === 'blocks' },
+    viewState.view !== 'blocks' && { label: `Block ${viewState.selectedBlock?.height}`, onClick: () => updateViewState('blockDetail', viewState.selectedBlock), active: viewState.view === 'blockDetail' },
+    viewState.view === 'transactionDetail' && { label: `Transaction ${viewState.selectedTransaction?.hash}`, active: true },
+  ].filter(Boolean);
+
   const blocks = [
     {
       hash: "000000000000000000076b86795cd772de07d73c40293636cbf3ce69c7c2e2c5",
@@ -19,7 +35,6 @@ const BlockchainExplorer = () => {
           date: 1562956800,
           fee: "0.0001",
         },
-        // More mock transactions for this block...
       ],
       time: 1562956800,
       reward: "12.5",
@@ -36,33 +51,48 @@ const BlockchainExplorer = () => {
           date: 1563043200,
           fee: "0.0002",
         },
-        // More mock transactions for this block...
       ],
       time: 1563043200,
       reward: "12.5",
       confirmations: 950,
     },
-    // Add more mock blocks as necessary...
   ];
 
-  return (
+ return (
     <Container>
-      <ListGroup>
-        {blocks.map((block) => (
-          <ListGroupItem
-            key={block.hash}
-            action
-            onClick={() => setSelectedBlock(block)}
-            style={{ cursor: 'pointer' }}
-          >
-            Block {block.height}
-          </ListGroupItem>
+      {/* Breadcrumbs */}
+      <Breadcrumb>
+        {breadcrumbItems.map((item, idx) => (
+          <Breadcrumb.Item key={idx} active={item.active} onClick={item.onClick} style={{ cursor: 'pointer' }}>
+            {item.label}
+          </Breadcrumb.Item>
         ))}
-      </ListGroup>
+      </Breadcrumb>
 
-      {/* Block Detail View */}
-      {selectedBlock && (
-        <BlockDetail blockData={selectedBlock} closeDetail={() => setSelectedBlock(null)} />
+      {/* Conditional rendering based on view state */}
+      {viewState.view === 'blocks' && (
+        <ListGroup>
+          {blocks.map((block) => (
+            <ListGroupItem
+              key={block.hash}
+              action
+              onClick={() => updateViewState('blockDetail', block)}
+            >
+              Block {block.height}
+            </ListGroupItem>
+          ))}
+        </ListGroup>
+      )}
+
+      {viewState.view === 'blockDetail' && viewState.selectedBlock && (
+        <BlockDetail
+          blockData={viewState.selectedBlock}
+          selectTransaction={(tx) => updateViewState('transactionDetail', viewState.selectedBlock, tx)}
+        />
+      )}
+
+      {viewState.view === 'transactionDetail' && viewState.selectedTransaction && (
+        <TransactionDetail txHash={viewState.selectedTransaction.hash} />
       )}
     </Container>
   );

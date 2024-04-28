@@ -2,14 +2,11 @@
 import { Card, Button } from 'react-bootstrap';
 
 const TransactionDetail = ({ txHash, closeDetail }) => {
-  // Replace the following with the transaction details retrieval
   const transactionDetails = {
-    // Mock transaction details based on txHash
     amount: "0.001 BTC",
     from: "coinbase",
     to: "address",
     fee: "0.0001 BTC",
-    // ... other details
   };
 
   return (
