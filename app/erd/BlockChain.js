@@ -1,124 +1,69 @@
-import { useState, useEffect } from "react";
-import { Table, Container, Row, Col, Card } from "react-bootstrap";
-import BlockDetail from "./BlockDetail";
-import { useRouter } from "next/navigation";
-
-const BlockchainHeader = ({ blockHeight, supply, marketCap, changeRates }) => {
-  return (
-    <Container className="my-4">
-      <Row className="justify-content-md-center">
-        <Col md={3}>
-          <Card>
-            <Card.Body>
-              <Card.Title>Block Height</Card.Title>
-              <Card.Text>{blockHeight}</Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={3}>
-          <Card>
-            <Card.Body>
-              <Card.Title>Supply</Card.Title>
-              <Card.Text>{supply}</Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-        <Col md={3}>
-          <Card>
-            <Card.Body>
-              <Card.Title>Market Cap</Card.Title>
-              <Card.Text>{marketCap}</Card.Text>
-            </Card.Body>
-          </Card>
-        </Col>
-        {/* ... include other cards for each change rate */}
-      </Row>
-    </Container>
-  );
-};
+// BlockchainExplorer.js
+import { useState } from 'react';
+import { Container, ListGroup, ListGroupItem } from 'react-bootstrap';
+import BlockDetail from './BlockDetail'; // Adjust the path as necessary
 
 const BlockchainExplorer = () => {
-  const [headerData, setHeaderData] = useState([]);
-  const router = useRouter();
-  const [blocks, setBlocks] = useState([
-    // Mock block data
+  const [selectedBlock, setSelectedBlock] = useState(null);
+
+  // Mock data for the blocks
+  const blocks = [
     {
       hash: "000000000000000000076b86795cd772de07d73c40293636cbf3ce69c7c2e2c5",
-      height: 840813,
-      size: 123456,
-      transactions: 2200,
-      reward: "6.25",
-      time: 1618888888,
+      height: 580000,
+      size: 1254336,
+      transactions: [
+        {
+          hash: "79abf8f0d68f7d8225",
+          amount: "0.5",
+          date: 1562956800,
+          fee: "0.0001",
+        },
+        // More mock transactions for this block...
+      ],
+      time: 1562956800,
+      reward: "12.5",
+      confirmations: 1000,
     },
     {
       hash: "000000000000000000087c86795cd772de07d73c40293636cbf3ce69c7c2e2d6",
-      height: 840814,
-      size: 113456,
-      transactions: 2100,
-      reward: "6.25",
-      time: 1618890000,
+      height: 580001,
+      size: 1239811,
+      transactions: [
+        {
+          hash: "88acf8f0d68f7d8226",
+          amount: "0.8",
+          date: 1563043200,
+          fee: "0.0002",
+        },
+        // More mock transactions for this block...
+      ],
+      time: 1563043200,
+      reward: "12.5",
+      confirmations: 950,
     },
-    // Add more mock blocks as needed
-  ]);
-
-  useEffect(() => {
-    // You would fetch and set the header data here, as well as the blocks
-    // Simulating fetched data with placeholder values
-    setHeaderData({
-      blockHeight: "840813",
-      supply: "19,690,000.00",
-      marketCap: "1,250,027,936,475.94 USD",
-      changeRates: {
-        hourly: "-0.69%",
-        daily: "-4.41%",
-        weekly: "2.88%",
-      },
-    });
-    // Fetch the blocks as before...
-  }, []);
-
-  const [selectedBlockHash, setSelectedBlockHash] = useState(null);
-
-  const handleBlockClick = (hash) => {
-    router.push(`/erd/${hash}`);
-  };
+    // Add more mock blocks as necessary...
+  ];
 
   return (
     <Container>
-      <Row className="justify-content-md-center">
-        <Col md={12}>
-          <Table striped bordered hover variant="dark" className="text-center">
-            <thead>
-              <tr>
-                <th>Hash</th>
-                <th>Block Height</th>
-                <th>Block Size (bytes)</th>
-                <th>Transactions</th>
-                <th>Block Reward</th>
-                <th>Mined Date & Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              {blocks.map((block) => (
-                <tr key={block.hash}>
-                  <td>
-                    <a href="#!" onClick={() => handleBlockClick(block.hash)}>
-                      {block.hash}
-                    </a>
-                  </td>
-                  <td>{block.height}</td>
-                  <td>{block.size}</td>
-                  <td>{block.transactions}</td>
-                  <td>{block.reward} BTC</td>
-                  <td>{new Date(block.time * 1000).toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </Col>
-      </Row>
-      {/* Display the BlockDetail component when a block hash is selected */}
-      {selectedBlockHash && <BlockDetail blockHash={selectedBlockHash} />}
+      <ListGroup>
+        {blocks.map((block) => (
+          <ListGroupItem
+            key={block.hash}
+            action
+            onClick={() => setSelectedBlock(block)}
+            style={{ cursor: 'pointer' }}
+          >
+            Block {block.height}
+          </ListGroupItem>
+        ))}
+      </ListGroup>
+
+      {/* Block Detail View */}
+      {selectedBlock && (
+        <BlockDetail blockData={selectedBlock} closeDetail={() => setSelectedBlock(null)} />
+      )}
     </Container>
   );
 };
