@@ -7,7 +7,6 @@ import SparqlEditor from "./SparqlEditor";
 import userManager from "@/utils/oidc";
 import BlockchainExplorer from "./BlockChain";
 
-
 export default function Home() {
   const [tabs, setTabs] = useState([]);
   const [activeKey, setActiveKey] = useState(null);
@@ -32,10 +31,8 @@ export default function Home() {
     fetchUser();
   }, []);
 
-  // Function to generate a unique key for each new tab
   const generateUniqueKey = (prefix) => `${prefix}-${tabCounter}`;
 
-  // Function to handle adding new tabs
   const addTab = (type) => {
     const newTabKey = generateUniqueKey(type);
     let component;
@@ -111,10 +108,10 @@ export default function Home() {
               (user ? <ErdEditor /> : <div>Login Required</div>)}
             {tab.eventKey.includes("sparqlQuery") &&
               (user ? <SparqlEditor /> : <div>Login Required</div>)}
-                  {tab.eventKey.includes("other") &&
+            {tab.eventKey.includes("other") &&
               (user ? <div>Other Component</div> : <div>Login Required</div>)}
             {tab.eventKey.includes("blockchain") &&
-              (user ? <BlockchainExplorer/> : <div>Login Required</div>)}
+              (user ? <BlockchainExplorer /> : <div>Login Required</div>)}
           </Tab.Pane>
         ))}
       </Tab.Content>

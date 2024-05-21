@@ -79,7 +79,6 @@ const BlockchainExplorer = () => {
 
   return (
     <Container>
-      {/* Breadcrumbs */}
       <Breadcrumb>
         {breadcrumbItems.map((item, idx) => (
           <Breadcrumb.Item
@@ -93,7 +92,6 @@ const BlockchainExplorer = () => {
         ))}
       </Breadcrumb>
 
-      {/* Conditional rendering based on view state */}
       {viewState.view === "blocks" && (
         <ListGroup>
           {blocks.map((block) => (
